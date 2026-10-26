@@ -54,12 +54,11 @@
     \end{itemize}
 
     \column{.43\textwidth}
-    \includegraphics[width=\textwidth]{ppom/fig1-substitute-gap.jpg}
-    \vspace{-0.2em}
-    \footnotesize
+    \includegraphics[width=.94\textwidth]{ppom/fig1-substitute-gap.jpg}
+    \vspace{-0.6em}
+    \scriptsize
     \textbf{Fig.~1}：同一批对抗人脸，分别在替代模型与目标模型上测 ASR。
-    替代模型上接近饱和，目标模型上出现\textbf{明显落差}——
-    这就是本文要消掉的误差项。
+    替代模型上接近饱和，目标模型上明显落差——这就是本文要消掉的误差项。
   \end{columns}
 \end{frame}
 
@@ -94,9 +93,9 @@
 
 \begin{frame}{核心思路：换掉扰动的「表示形式」}
   \begin{center}
-    \includegraphics[width=.86\textwidth]{ppom/fig3-arch.jpg}
+    \includegraphics[width=.72\textwidth]{ppom/fig3-arch.jpg}
   \end{center}
-  \vspace{-0.4em}
+  \vspace{-0.8em}
   \small
   两级层次结构：\textbf{区域级}动作（智能体决定扰动哪一块）
   $\rightarrow$ \textbf{像素级}修改（块内整体加减亮度）。
@@ -166,7 +165,7 @@
 
 \begin{frame}{关键消融：1\% $\rightarrow$ 100\%}
   \begin{center}
-    \small
+    \scriptsize
     \begin{tabular}{lcccc}
       \toprule
       LFW 数据集 & IR50 & MobileFace & InsightFace & ArcFace \\
@@ -180,21 +179,23 @@
     \end{tabular}
   \end{center}
 
-  \vspace{0.3em}
+  \vspace{-0.2em}
   \begin{columns}[T]
-    \column{.5\textwidth}
+    \column{.48\textwidth}
     \begin{alertblock}{同一套策略、同一查询预算}
+      \scriptsize
       只把扰动单元从\textbf{单个像素}换成\textbf{整块均匀亮度}，
       成功率从 1\% 跳到接近 100\%。
     \end{alertblock}
 
     \column{.48\textwidth}
     \begin{exampleblock}{但要看清楚两件事}
+      \scriptsize
       \begin{itemize}
-        \item 逐像素组的 PSNR 高达 \textbf{57.1}（画质"更好"），
-              可 ASR 只有 1\% —— \textbf{攻击失败时画质指标没有意义}
-        \item 智能体的增益主要体现在\textbf{查询数}
-              （13122 $\rightarrow$ 2007），不是成功率（98.0 $\rightarrow$ 100.0）
+        \item 逐像素组 PSNR 高达 \textbf{57.1}（画质“更好”），ASR 却只有 1\%
+              —— \textbf{攻击失败时画质指标没有意义}
+        \item 智能体的增益主要在\textbf{查询数}（13122$\rightarrow$2007），
+              而非成功率（98.0$\rightarrow$100.0）
       \end{itemize}
     \end{exampleblock}
   \end{columns}
@@ -311,19 +312,20 @@
 \end{frame}
 
 \begin{frame}{总结}
+  \small
   \begin{enumerate}
     \item \textbf{去掉了替代模型这个误差源}：直接对目标模型反馈做优化，
           在 7 个开源模型 + Face++ 上同时提升 ASR 与画质。
     \item \textbf{真正的新东西是扰动的表示形式}：不是更好的优化器，
           而是把扰动单元从像素换成「整块均匀亮度偏移」。
           消融显示这一步决定 1\% 还是 100\%。
-    \item \textbf{给了一个可继续做的命题}：
-          对抗训练防御的是一个\textbf{梯度邻域}，而攻击可以不活在那个邻域里。
-          「扰动表示空间」这个维度，目前还很少有人系统研究。
+    \item \textbf{一个可继续做的命题}：对抗训练防御的是一个\textbf{梯度邻域}，
+          而攻击可以不活在那个邻域里。
   \end{enumerate}
 
+  \vspace{-0.3em}
   \begin{block}{如果要往下做}
-    \small
+    \scriptsize
     \begin{itemize}
       \item 把「区域形状 / 偏移粒度 / 单步幅度」变成可学习量，而不是手工网格搜索
       \item 在梯度类攻击与离散搜索之间做统一框架：什么条件下离散空间更优？
@@ -331,13 +333,13 @@
     \end{itemize}
   \end{block}
 
-  \vspace{0.2em}
-  {\scriptsize
-  \textbf{参考文献}\quad
+  \vspace{-0.4em}
+  {\tiny
+  \textbf{文献}\quad
   K.~Cheng \emph{et al.}, ``PPOM-Attack: A Substitute Model-Free Perturbation
   Prediction and Optimization Method for Black-Box Adversarial Attack Against
   Face Recognition,'' \emph{IEEE TIFS}, 2026. DOI: 10.1109/TIFS.2026.3666853.\\
-  \hspace*{4.6em}基线：PGD (ICLR'18)、TI-RDIM (ECCV'20)、TIP-IM (ICCV'21)、
+  \hspace*{2.6em}基线：PGD (ICLR'18)、TI-RDIM (ECCV'20)、TIP-IM (ICCV'21)、
   Clip2Protect (CVPR'23)、Sibling-Attack (CVPR'23)、AdvDiffusion (AAAI'24)、
   DPA (CVPR'25)、TRADES (ICML'19)。
   }
