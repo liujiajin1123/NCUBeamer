@@ -2,25 +2,12 @@
 % !TeX encoding = UTF-8
 
 %% --------------------------------------------------------------------------------
-%% Copyright (C) 2021-2026 SJTUG
-%% 
-%% SJTUBeamer Example Document by SJTUG
-%% 
-%% SJTUBeamer Example Document is licensed under a
-%% Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-%% 
-%% You should have received a copy of the license along with this
-%% work. If not, see <http://creativecommons.org/licenses/by-nc-sa/4.0/>.
-%%
-%% For a quick start, check out src/doc/sjtubeamerquickstart.tex
-%% Join discussions: https://github.com/sjtug/SJTUBeamer/discussions
+%% 基于 NCUBeamer (SJTUBeamer) 模板
+%% 汇报主题：PPOM-Attack (IEEE TIFS 2026)
+%% 时长：10 分钟
 %% --------------------------------------------------------------------------------
 
 \documentclass[xcolor=table,dvipsnames,svgnames,aspectratio=169]{ctexbeamer}
-% 可以通过 fontset=macnew / fontset=ubuntu / fontset=windows 选项切换字体集；
-% 在 Prism 平台编译时，需要添加 fontset=ubuntu 选项以正确显示中文字体；
-% 如遇无法显示的数学符号，尝试对 ctexbeamer 文档类添加 no-math 选项；
-% 写纯英文幻灯片可以改用 beamer 文档类。
 
 \usepackage{tikz}
 \usepackage[normalem]{ulem}
@@ -38,14 +25,9 @@
 \usepackage{fontawesome5}
 \usepackage{hyperref}
 
-% 参考文献设置，使用 style=gb7714-2015 样式为标准顺序编码制，
-% 使用 style=gb7714-2015ay 样式可以改为著者-出版年制。
-\usepackage[backend=biber,style=gb7714-2015]{biblatex}
-\addbibresource{ref.bib}
-
-% 该行指定了图像的额外搜索路径
+% 本报告使用手写 thebibliography，因此不加载 biblatex/biber，
+% 避免与 thebibliography 环境冲突。
 \graphicspath{{figures/}}
-
 
 \pdfstringdefDisableCommands{
   \let\\\relax
@@ -68,13 +50,6 @@
 \def\TeXLive{\TeX{} Live}
 \let\TL=\TeXLive
 
-\newcommand{\SJTUThesis}{\textsc{SJTUThesis}}
-\newcommand{\SJTUThesisVersion}{2.3.1}
-\newcommand{\SJTUThesisDate}{2026/3/12}
-\newcommand{\SJTUBeamer}{\textsc{SJTUBeamer}}
-\newcommand{\SJTUBeamerVersion}{3.2.0}
-\newcommand{\SJTUBeamerDate}{2026/5/20}
-
 \newcommand\link[1]{\href{#1}{\faLink}}
 \newcommand\pkg[1]{\texttt{#1}}
 
@@ -92,16 +67,6 @@
   \end{beamercolorbox}
 }
 
-% 使用 maxplus/max/min 切换标题页样式
-% 使用 red/blue 切换主色调
-% 使用 light/dark 切换亮/暗色模式
-% 使用外样式关键词以获得不同的边栏样式
-%   miniframes infolines  sidebar
-%   default    smoothbars split	 
-%   shadow     tree       smoothtree
-% 使用 topright/bottomright 切换徽标位置
-% 使用逗号分隔列表以同时使用多种选项
-
 % NCU: 结尾页"谢谢"上方显示校徽
 \renewcommand{\bottompagelogo}{\includegraphics{vi/ncu-logo.png}}
 
@@ -109,97 +74,59 @@
 \setbeamertemplate{background canvas}{%
   \includegraphics[width=\paperwidth,height=\paperheight]{vi/ncu-cover-bg.png}
 }
-% 对于 max 主题，如果需要关闭正文背景图，请取消注释上一行。
-
-% \tikzexternalize[prefix=build/]
-% 如果您需要缓存 tikz 图像，请取消注释上一行，并在编译选项中添加 -shell-escape。
 
 \lstset{
-  language=[LaTeX]TeX,           % 更改高亮语言
-  texcsstyle=*\color{cprimary},  % 只在高亮 LaTeX 语言时必须
+  language=[LaTeX]TeX,
+  texcsstyle=*\color{cprimary},
   tabsize=2,
-  basicstyle=\ttfamily\small,%
-  keywordstyle=\color{cprimary},%
-  stringstyle=\color{csecondary},%
-  commentstyle=\color{ctertiary!50!gray},%
-  breaklines,%
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{cprimary},
+  stringstyle=\color{csecondary},
+  commentstyle=\color{ctertiary!50!gray},
+  breaklines,
 }
-
-
 
 \begin{document}
 
-% 使用节目录
-\AtBeginSection[]{
-  \begin{frame}
-    %% 使用传统节目录，也可以将 subsectionstyle=... 换成 hideallsubsections 以隐藏所有小节信息
-    \tableofcontents[currentsection,subsectionstyle=show/show/hide]
-    %% 或者使用节页
-    % \sectionpage
-  \end{frame}
-}
+% 10 分钟报告：不使用每节自动插入的目录页
+% \AtBeginSection[]{...}
 
-% 使用小节目录
-\AtBeginSubsection[]{		       % 在每小节开始
-  \begin{frame}
-    %% 使用传统小节目录
-    \tableofcontents[currentsection,subsectionstyle=show/shaded/hide]
-    %% 或者使用小节页
-    % \subsectionpage
-  \end{frame}
-}
-
-% NCU: 封面（顶/底蓝条 + 左上角校徽 + 中间白底）
+% NCU: 封面
 \begin{frame}
   \vfill
   \centering
-  {\Large\bfseries 如何使用 \LaTeX{} 排版论文\par}
+  {\Large\bfseries 无替代模型的黑盒人脸对抗攻击\par}
+  \vspace{0.35cm}
+  {\large PPOM-Attack：用 PPO 选区域，用亮度偏移生成扰动\par}
   \vspace{0.5cm}
-  {\large SJTUBeamer 示例文档\par}
+  {\normalsize Ke Cheng, Jixin Zhang, Haiyun Li, Zipeng Zhong, Mingwu Zhang, Zheng Qin\par}
+  \vspace{0.2cm}
+  {\normalsize \textit{IEEE Transactions on Information Forensics and Security}, 2026\par}
   \vfill
-  Alexara Wu\par
-  上海交通大学 Linux 用户组\par
+  组会汇报\par
   2026 年 10 月\par
   \vfill
 \end{frame}
 
-\begin{frame}
-  \frametitle{来源}
-  \begin{thebibliography}{00}
-    \setbeamertemplate{bibliography item}[online]
-    \bibitem{} Alexara Wu.
-    \newblock 如何使用 \LaTeX{} 排版论文[EB/OL].
-    \newblock 2021.
-    \url{https://github.com/sjtug/sjtulib-latex-talk/tree/alexara-2021}
-  \end{thebibliography}
-
-  \vspace*{2ex}
-
-  \begin{itemize}
-    \item 本示例文档的源码结构适用于简短的单次报告，仅展示 \beamer{} 文档类的通
-          用功能，更多地在使用 \SJTUBeamer{} 的样式信息。
-    \item 为发挥 \SJTUBeamer{} 的全部功能，参见发布区
-          \link{https://github.com/sjtug/SJTUBeamer/releases} 的快速入门、用户手
-          册与开发文档。
-    \item 就制作一组讲座而言，相关源码结构可以参考新讲座
-          \link{https://github.com/sjtug/sjtulib-latex-talk/tree/logcreative-2022}。
-          新讲座使用了社区版主题的同时也展示了 \SJTUBeamer{} 的特殊用法。
-  \end{itemize}
-
-\end{frame}
-
-\begin{frame}{目录}
-  \tableofcontents[hideallsubsections]	% 隐藏所有小节信息
-\end{frame}
-
-% \include{contents/introduction}
-% \include{contents/basis}
-% \include{contents/thesis}
-% \include{contents/summary}
+\include{contents/ppom}
 
 \begin{frame}
   \frametitle{参考文献}
-  \printbibliography[heading=none]
+  \footnotesize
+  \begin{thebibliography}{99}
+    \setbeamertemplate{bibliography item}[text]
+    \bibitem{ppom} K. Cheng, J. Zhang, H. Li, Z. Zhong, M. Zhang, and Z. Qin,
+    ``PPOM-Attack: A Substitute Model-Free Perturbation Prediction and
+    Optimization Method for Black-Box Adversarial Attack Against Face Recognition,''
+    \emph{IEEE Trans. Inf. Forensics Security}, 2026.
+    \newblock DOI: 10.1109/TIFS.2026.3666853
+    \bibitem{pgd} A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu,
+    ``Towards deep learning models resistant to adversarial attacks,'' ICLR 2018.
+    \bibitem{clip2protect} \emph{Clip2Protect}, CVPR 2023.
+    \bibitem{advdiff} \emph{AdvDiffusion}, AAAI 2024.
+    \bibitem{trades} H. Zhang \emph{et al.}, ``Theoretically principled trade-off
+    between robustness and accuracy,'' ICML 2019.
+  \end{thebibliography}
 \end{frame}
 
 \makebottom
