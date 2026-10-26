@@ -30,7 +30,6 @@
 \usepackage{hologo}
 \usepackage{colortbl}
 \usepackage{shapepar}
-\usepackage{hyperxmp}
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{tipa}
@@ -47,13 +46,6 @@
 % 该行指定了图像的额外搜索路径
 \graphicspath{{figures/}}
 
-\hypersetup{
-  pdfcopyright       = {Licensed under CC-BY-SA 4.0. Some rights reserved.},
-  pdflicenseurl      = {http://creativecommons.org/licenses/by-sa/4.0/},
-  unicode            = true,
-  psdextra           = true,
-  pdfdisplaydoctitle = true
-}
 
 \pdfstringdefDisableCommands{
   \let\\\relax
@@ -91,7 +83,15 @@
 \def\cmdxmp#1#2#3{\small{\texttt{\color{structure}$\backslash$#1}\{#2\}
 \hspace{1em}\\ $\Rightarrow$\hspace{1em} {#3}\par\vskip1em}}
 
-\usetheme[max,blue,topright]{sjtubeamer}
+\usetheme[max,blue]{sjtubeamer}
+\setbeamertemplate{logo}{}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=0.9cm,sep=4pt]{palette primary}
+    \hspace{0.3cm}\includegraphics[height=0.65cm]{vi/ncu-vi.png}
+  \end{beamercolorbox}
+}
+
 % 使用 maxplus/max/min 切换标题页样式
 % 使用 red/blue 切换主色调
 % 使用 light/dark 切换亮/暗色模式
@@ -101,6 +101,9 @@
 %   shadow     tree       smoothtree
 % 使用 topright/bottomright 切换徽标位置
 % 使用逗号分隔列表以同时使用多种选项
+
+% NCU: 结尾页"谢谢"上方显示校徽
+\renewcommand{\bottompagelogo}{\includegraphics{vi/ncu-logo.png}}
 
 % NCU: 封面/正文背景为纯白图片
 \setbeamertemplate{background canvas}{%

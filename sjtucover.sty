@@ -251,6 +251,8 @@
   \end{beamercolorbox}
   \vfill
 }
+% NCU: configurable bottom-page badge; default falls back to the beamer logo template
+\providecommand{\bottompagelogo}{\usebeamertemplate{logo}}
 \defbeamertemplate*{bottom page}{max}[1][]
 {
   \vbox{}
@@ -277,7 +279,7 @@
       \node[black] at (\midw,-0.65\paperheight) {
         \resizebox{1.25\paperwidth}{!}{\vphantom{-}\inserttitlegraphic}};
       \node[palette primary.bg] at (\midw,-0.2\paperheight)
-        {\resizebox{!}{2.5cm}{\vphantom{-}\usebeamertemplate{logo}}};
+        {\resizebox{!}{2.5cm}{\vphantom{-}\bottompagelogo}};
       \node at (\midw,-0.45\paperheight) {
         \usebeamercolor[bg]{palette primary}
         \LARGE \bfseries\bottomthanks};

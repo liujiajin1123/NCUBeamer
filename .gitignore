@@ -270,3 +270,5 @@ cover-*.pdf
 basis-*.tex
 step*.pdf
 contrib/*/*.pdf
+*.err
+main.bbl-SAVE-ERROR
