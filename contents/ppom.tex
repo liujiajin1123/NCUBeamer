@@ -8,6 +8,7 @@
 \section{问题}
 
 \begin{frame}{一页看懂}
+  \vspace{-1.em}
   \begin{columns}[T]
     \column{.32\textwidth}
     \begin{block}{问题}
@@ -36,27 +37,31 @@
 
 \begin{frame}{背景：两条路线，同一个隐含假设}
   \begin{columns}[T]
-    \column{.55\textwidth}
+    \column{.56\textwidth}
+    \small
     \begin{itemize}
       \item \textbf{替代模型 + 梯度}：PGD、TI-RDIM、TIP-IM、Sibling-Attack、DPA
       \item \textbf{替代模型 + 生成模型}：Adv-Makeup、AMT-GAN、Clip2Protect、AdvDiffusion
     \end{itemize}
 
+    \vspace{-0.3em}
     \begin{alertblock}{共同前提}
-      扰动必须活在\textbf{像素级、连续、可微}的空间里；\\
-      并且替代模型的决策边界要与目标模型「足够接近」。
+      \footnotesize
+      扰动必须活在\textbf{像素级、连续、可微}的空间里；
+      替代模型的决策边界要与目标模型「足够接近」。
     \end{alertblock}
 
+    \vspace{-0.3em}
     \begin{itemize}
-      \item 架构不同（ResNet / DenseNet / VGGFace）、训练数据不同 →
-            \alert{替代模型与目标模型之间存在系统性偏差}
-      \item 于是：在替代模型上打得很好，\textbf{在目标模型上大幅掉点}
+      \item 架构（ResNet / DenseNet / VGGFace）、训练数据不同 →
+            \alert{替代模型与目标模型存在系统性偏差}
+      \item 于是在替代模型上打得好，\textbf{在目标模型上大幅掉点}
     \end{itemize}
 
-    \column{.43\textwidth}
-    \includegraphics[width=.94\textwidth]{ppom/fig1-substitute-gap.jpg}
-    \vspace{-0.6em}
-    \scriptsize
+    \column{.42\textwidth}
+    \includegraphics[width=.72\textwidth]{ppom/fig1-substitute-gap.jpg}
+    \vspace{-0.4em}
+    \tiny
     \textbf{Fig.~1}：同一批对抗人脸，分别在替代模型与目标模型上测 ASR。
     替代模型上接近饱和，目标模型上明显落差——这就是本文要消掉的误差项。
   \end{columns}
@@ -135,14 +140,17 @@
       \item 全 $+1$ 矩阵 $+\Delta^t$（整体调亮）
       \item 全 $-1$ 矩阵 $-\Delta^t$（整体调暗）
     \end{itemize}
-    \vspace{0.4em}
+    \vspace{0.2em}
+    \footnotesize
     分别查询目标模型、算与目标身份的嵌入距离：
     \[
-      d^{t+1} = \min\Big\{ D(f(s^t{+}\Delta^t), f(x^t)),\;
-                       D(f(s^t{-}\Delta^t), f(x^t)),\;
-                       D(f(s^t), f(x^t)) \Big\}
+      \begin{aligned}
+        d^{t+1} = \min\big\{ & D(f(s^t{+}\Delta^t), f(x^t)), \\
+                             & D(f(s^t{-}\Delta^t), f(x^t)), \\
+                             & D(f(s^t), f(x^t)) \big\}
+      \end{aligned}
     \]
-    取最小者；\textbf{若没有改进则拒绝这一步}。
+    \normalsize 取最小者；\textbf{若没有改进则拒绝这一步}。
 
     \column{.46\textwidth}
     \begin{block}{两个工程细节}
@@ -232,7 +240,7 @@
         \item Evolution / CGBA / DevoPatch 直接打满 10000
       \end{itemize}
     \end{block}
-    \vspace{0.2em}
+    \vspace{-0.4em}
     \footnotesize
     LPIPS 低一个数量级：分块均匀亮度几乎不引入高频纹理，看起来只是「某处亮/暗了一点」。
   \end{columns}
@@ -332,15 +340,4 @@
       \item 反向用：这类低维扰动能否作为\textbf{对抗训练的数据增广}，补上梯度邻域外的盲区
     \end{itemize}
   \end{block}
-
-  \vspace{-0.4em}
-  {\tiny
-  \textbf{文献}\quad
-  K.~Cheng \emph{et al.}, ``PPOM-Attack: A Substitute Model-Free Perturbation
-  Prediction and Optimization Method for Black-Box Adversarial Attack Against
-  Face Recognition,'' \emph{IEEE TIFS}, 2026. DOI: 10.1109/TIFS.2026.3666853.\\
-  \hspace*{2.6em}基线：PGD (ICLR'18)、TI-RDIM (ECCV'20)、TIP-IM (ICCV'21)、
-  Clip2Protect (CVPR'23)、Sibling-Attack (CVPR'23)、AdvDiffusion (AAAI'24)、
-  DPA (CVPR'25)、TRADES (ICML'19)。
-  }
 \end{frame}
