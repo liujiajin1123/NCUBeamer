@@ -91,7 +91,7 @@
 \def\cmdxmp#1#2#3{\small{\texttt{\color{structure}$\backslash$#1}\{#2\}
 \hspace{1em}\\ $\Rightarrow$\hspace{1em} {#3}\par\vskip1em}}
 
-\usetheme[maxplus]{sjtubeamer}
+\usetheme[max,blue,topright]{sjtubeamer}
 % 使用 maxplus/max/min 切换标题页样式
 % 使用 red/blue 切换主色调
 % 使用 light/dark 切换亮/暗色模式
@@ -102,7 +102,10 @@
 % 使用 topright/bottomright 切换徽标位置
 % 使用逗号分隔列表以同时使用多种选项
 
-% \setbeamertemplate{background}{}
+% NCU: 封面/正文背景为纯白图片
+\setbeamertemplate{background canvas}{%
+  \includegraphics[width=\paperwidth,height=\paperheight]{vi/ncu-cover-bg.png}
+}
 % 对于 max 主题，如果需要关闭正文背景图，请取消注释上一行。
 
 % \tikzexternalize[prefix=build/]
@@ -119,16 +122,7 @@
   breaklines,%
 }
 
-\author{Alexara Wu}
-\institute[SJTUG]{上海交通大学 Linux 用户组}
-\date{\the\year 年 \the\month 月}
-\subject{上海交通大学图书馆专题培训讲座}
-\keywords{LaTeX, 论文排版, SJTUThesis}
 
-\title[\SJTUBeamer 示例文档] % 页脚显示标题
-{\textbf{如何使用 \LaTeX{} 排版论文}} % 首页标题
-
-\subtitle{\SJTUBeamer 示例文档}
 
 \begin{document}
 
@@ -152,7 +146,19 @@
   \end{frame}
 }
 
-\maketitle
+% NCU: 封面（顶/底蓝条 + 左上角校徽 + 中间白底）
+\begin{frame}
+  \vfill
+  \centering
+  {\Large\bfseries 如何使用 \LaTeX{} 排版论文\par}
+  \vspace{0.5cm}
+  {\large SJTUBeamer 示例文档\par}
+  \vfill
+  Alexara Wu\par
+  上海交通大学 Linux 用户组\par
+  2026 年 10 月\par
+  \vfill
+\end{frame}
 
 \begin{frame}
   \frametitle{来源}
@@ -183,10 +189,10 @@
   \tableofcontents[hideallsubsections]	% 隐藏所有小节信息
 \end{frame}
 
-\include{contents/introduction}
-\include{contents/basis}
-\include{contents/thesis}
-\include{contents/summary}
+% \include{contents/introduction}
+% \include{contents/basis}
+% \include{contents/thesis}
+% \include{contents/summary}
 
 \begin{frame}
   \frametitle{参考文献}

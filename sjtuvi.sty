@@ -87,7 +87,9 @@
     \end{tikzpicture}%
   }
 }
-\definelogo{sjtubadge}{vi/sjtu-vi-sjtubadge.pdf}{0}{0}
+\definelogo{sjtubadge}{vi/sjtu-vi-sjtubadge.png}{0}{0}
+% NCU: 校徽直接显示 PNG 原色，不走 tikz fading 染色
+\renewcommand{\sjtubadge}[1][]{\includegraphics[height=1cm]{vi/sjtu-vi-sjtubadge.png}}
 \definelogo{zhlogo}{vi/sjtu-vi-zhlogo.pdf}{0.13}{0.75}
 \definelogo{enlogo}{vi/sjtu-vi-enlogo.pdf}{0.13}{0.75}
 \definelogo{dlogo}{vi/sjtu-vi-dlogo.pdf}{0}{0}
