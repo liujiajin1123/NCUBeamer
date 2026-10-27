@@ -8,7 +8,7 @@
 \section{问题}
 
 \begin{frame}{一页看懂}
-  \vspace{-1.em}
+  \vspace{-3.6em}
   \begin{columns}[T]
     \column{.32\textwidth}
     \begin{block}{问题}
@@ -59,7 +59,7 @@
     \end{itemize}
 
     \column{.42\textwidth}
-    \begin{minipage}{.78\linewidth}
+    \begin{minipage}{\linewidth}
       \setlength{\parindent}{0pt}
       \includegraphics[width=\linewidth]{ppom/fig1-substitute-gap.jpg}
 
@@ -71,12 +71,14 @@
 \end{frame}
 
 \begin{frame}{威胁模型：把「不知道」写死}
+  \vspace{-3.6em}
   \begin{columns}[T]
     \column{.5\textwidth}
     \begin{block}{攻击者目标}
       让目标 FR 模型（\textbf{含对抗训练防御的模型}）
       把对抗人脸识别为指定身份，且视觉上不明显。
     \end{block}
+    \vspace{0.6em}
     \begin{block}{背景知识}
       对目标模型\textbf{零知识}：架构、参数、配置、训练数据一概不知，
       因此也拿不到梯度。
@@ -175,6 +177,7 @@
 \section{实验}
 
 \begin{frame}{关键消融：1\% $\rightarrow$ 100\%}
+
   \begin{center}
     \scriptsize
     \begin{tabular}{lcccc}
@@ -289,6 +292,7 @@
 \section{讨论}
 
 \begin{frame}{局限}
+  \vspace{-3.6em}
   \begin{columns}[T]
     \column{.49\textwidth}
     \begin{block}{论文自己承认的}
@@ -312,10 +316,4 @@
       \end{itemize}
     \end{alertblock}
   \end{columns}
-
-  \vspace{0.4em}
-  \begin{center}
-    \small
-    2k 查询上限时 ASR 掉到 59.0--88.8（LFW），说明「查询效率」的优势有边界。
-  \end{center}
 \end{frame}
