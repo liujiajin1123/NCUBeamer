@@ -1,0 +1,315 @@
+% !TeX encoding = UTF-8
+% !TeX root = ../main.tex
+
+%% 组会汇报：文献仓库 + codex + agent 工作流（10 页 / 约 12 分钟）
+%% 素材来源：D:\activeProjects\dfcv_project\second_work\second_work 实际仓库结构
+%% 事实依据：literature/README.md 分层规则、cards/P001.json 复核 notes、
+%%          derived/chunks.jsonl chunk schema、scripts/lit 流水线
+
+\section{总览}
+
+\begin{frame}{一页看懂}
+  \vspace{-3.2em}
+  \begin{columns}[T]
+    \column{.32\textwidth}
+    \begin{block}{我们建了什么}
+      \small
+      一个\textbf{可溯源的外置文献记忆}：
+      188 篇论文解析成 Markdown，
+      每句话都能落到 \texttt{md:行号}。
+    \end{block}
+
+    \column{.32\textwidth}
+    \begin{block}{换来了什么}
+      \small
+      codex 回答\textbf{更准}（有地面真值）；
+      找论文从\textbf{几十分钟}到\textbf{几秒}，
+      日常不用再出去爬。
+    \end{block}
+
+    \column{.32\textwidth}
+    \begin{block}{不能干什么}
+      \small
+      只覆盖\textbf{收进来的}，不代表领域全貌；
+      判「有没有人做过」\alert{仍必须外检}。
+    \end{block}
+  \end{columns}
+
+  \vspace{0.5em}
+  \begin{center}
+    \footnotesize
+    \texttt{pdfs} $\to$ \texttt{md}（带行号）$\to$ \texttt{cards}（带 locator）
+    $\to$ \texttt{chunks}（带 sha256）$\to$ 命中回到 \texttt{md}
+  \end{center}
+
+  \vspace{0.3em}
+  \begin{center}
+    \small 一句话：仓库提升的不是模型的智力，是回答的\textbf{地基}。\\
+    \vspace{0.2em}
+    \scriptsize 选题的进度，是你杀掉的候选数，不是收藏的论文数。
+  \end{center}
+\end{frame}
+
+\section{仓库}
+
+\begin{frame}{仓库结构：五层，两条边界}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.54\textwidth}
+    \scriptsize
+    \begin{tabular}{@{}ll@{}}
+      \toprule
+      层 & 内容 \\
+      \midrule
+      L0 \texttt{pdfs/} & 一手 PDF，仅本地，不入 Git \\
+      L1 \texttt{md/} & MinerU 解析正文 + \texttt{images/} \\
+      L1 \texttt{papers.csv} & 事实表：DOI / 年 / venue \\
+      L1 \texttt{doi-sources.csv} & 每条 DOI 的来源与核验 \\
+      L2 \texttt{cards/} & 人工复核证据卡，带 locator \\
+      L3 \texttt{derived/} & 切片索引，可重建 \\
+      外 \texttt{research/} & 推断层：候选与决策 \\
+      \bottomrule
+    \end{tabular}
+
+    \column{.44\textwidth}
+    \footnotesize
+    \begin{alertblock}{边界一：事实 vs 推断}
+      \scriptsize
+      \texttt{literature/} 只放论文写了什么；
+      \texttt{research/} 只放「我认为」。
+      Gap 结论不能拿去证明论文事实。
+    \end{alertblock}
+
+    \begin{alertblock}{边界二：原文 vs 派生}
+      \scriptsize
+      卡片、切片、检索命中只用于\textbf{发现与定位}；
+      结论必须回到 \texttt{md} 的行号。
+    \end{alertblock}
+  \end{columns}
+
+  \vspace{0.4em}
+  {\scriptsize \color{gray} 这两条边界救过很多次：最常见的错，是把卡片里的一句话当成论文结论。}
+\end{frame}
+
+\begin{frame}{为什么解析成 Markdown}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.5\textwidth}
+    \footnotesize
+    \begin{block}{四个理由}
+      \begin{itemize}
+        \item \textbf{可 grep、可行号}：\texttt{file:line} 是所有证据契约的地基
+        \item \textbf{token 效率}：带 \texttt{\#} 层级，去掉页眉页脚
+        \item \textbf{可切片}：标题层级天然是 chunk 边界
+        \item \textbf{图单独存}：\texttt{md/images/<stem>/}，要用再取
+      \end{itemize}
+    \end{block}
+
+    \column{.46\textwidth}
+    \footnotesize
+    \begin{alertblock}{代价：解析会错}
+      \scriptsize
+      \texttt{cards/P001.json} 里记录的真实矛盾：
+      \begin{itemize}
+        \item 正文称 softmin 聚合，公式却是\textbf{算术均值}
+        \item 同一符号 $\lambda_t$ 与 $\lambda_\varepsilon$ 混用
+        \item 表格错列，运行时间不可直接引用
+      \end{itemize}
+      \vspace{0.3em}
+      所以卡片必须人工复核，
+      并写明「原文哪里自相矛盾」。
+    \end{alertblock}
+  \end{columns}
+
+  \vspace{0.6em}
+  {\footnotesize 任何自动解析都要留复核口——这不是工具缺陷，是流程设计。}
+\end{frame}
+
+\begin{frame}[fragile]{切片与知识库：可选增强，不是前提}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.5\textwidth}
+    \scriptsize
+\begin{verbatim}
+{"chunk_id":"P001#000",
+ "paper_id":"P001",
+ "kind":"front_matter",
+ "heading":"ADV-TGD: ...",
+ "line_start":1,"line_end":2,
+ "sha256":"dc567..."}
+\end{verbatim}
+
+    \column{.46\textwidth}
+    \footnotesize
+    \begin{itemize}
+      \item \textbf{chunk 自带行号}：召回后直接回原文，不让模型复述
+      \item \textbf{两个库分开}：原文库答「这篇说了什么」，
+            卡片库答「这批论文哪些字段不同」
+      \item \textbf{sha256 + 可重建}：派生层随时重跑，不作事实源
+    \end{itemize}
+  \end{columns}
+
+  \vspace{0.7em}
+  \begin{center}
+    \footnotesize
+    没有 Dify 也能用：\texttt{grep} + 读 \texttt{md} 就是最小可用形态。\\
+    切片层是库变大、关键词对不上之后才加的。
+  \end{center}
+\end{frame}
+
+\section{收益}
+
+\begin{frame}{有了仓库，codex 变了什么}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.48\textwidth}
+    \small
+    \begin{block}{一、准确率上去了}
+      \footnotesize
+      \begin{itemize}
+        \item 基于\textbf{本地原文}，不是模型记忆
+        \item 每句能指到 \texttt{md:行号}
+        \item 书目由 \texttt{papers.csv} 兜底，不张冠李戴
+        \item 跨论文比较用同一套卡片字段
+      \end{itemize}
+      \vspace{0.3em}
+      \scriptsize 因果不是「模型更强」，是\textbf{有了可核对的地面真值}。\\
+      仓库脏了准确率立刻掉：DOI 错一条，后面引用全错。
+    \end{block}
+
+    \column{.48\textwidth}
+    \small
+    \begin{block}{二、不用每次出去找论文}
+      \footnotesize
+      原来：搜 $\to$ 出版社页 $\to$ 找 PDF $\to$ 下载 $\to$ 解析 $\to$ 读\\
+      现在：\texttt{grep}/召回 $\to$ 读 \texttt{md} $\to$ 行号
+      \vspace{0.4em}
+      \begin{itemize}
+        \item 不用等下载与解析（MinerU 已离线跑过）
+        \item 不用逐篇翻网页找「实验在第几节」
+        \item 不用把同一篇论文反复上传
+      \end{itemize}
+      \vspace{0.3em}
+      \scriptsize 省的是\textbf{重复发生}的中间环节，每天问十次省十次。
+    \end{block}
+  \end{columns}
+
+  \vspace{0.3em}
+  {\scriptsize 三、可复现、可审计、换模型不丢——事实在仓库里，不在权重里。}
+\end{frame}
+
+\begin{frame}{但要说清边界：仓库不是领域全貌}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.48\textwidth}
+    \footnotesize
+    \begin{alertblock}{只覆盖「你收进来的」}
+      \scriptsize
+      它提升的是\textbf{已收录文献}的回答质量，
+      不提升领域覆盖。2026 年 arXiv 多，
+      可能只是你最近收得多。
+    \end{alertblock}
+
+    \begin{block}{所以外检不能取消}
+      \scriptsize
+      判「有没有人做过」时必须出去查一次：\\
+      \textbf{减少日常访问外网 $\neq$ 不需要外网。}
+    \end{block}
+
+    \column{.48\textwidth}
+    \footnotesize
+    \begin{block}{语义层也是可选，不是前提}
+      \scriptsize
+      关键词明确、只查一篇 $\to$ 直接读 \texttt{md}。\\
+      只在换词、同义词、中英混检、
+      不预设关键词跨库找相关时才有价值。
+      \vspace{0.4em}
+      它的作用是把候选集\textbf{找全}，
+      降低「搜不到就以为没人做」的漏检——
+      \alert{不是让回答更聪明}。
+    \end{block}
+  \end{columns}
+
+  \vspace{0.5em}
+  {\footnotesize 讲这段要主动讲 codex 强在哪，否则像在推销工具。}
+\end{frame}
+
+\section{用法}
+
+\begin{frame}{三个用法：趋势、推荐、回检}
+  \vspace{-3em}
+  \begin{columns}[T]
+    \column{.31\textwidth}
+    \scriptsize
+    \begin{block}{趋势分析}
+      \begin{itemize}
+        \item 结构分布：venue / 攻击目标 / 生成域的比例变化
+        \item 局限聚类：数据 / 计算 / 泛化 / 协议 / 物理
+        \item 方法演化：标出「重复但没人比较过」的组合
+      \end{itemize}
+      \vspace{0.2em}
+      \alert{陷阱}：收录偏差；趋势 $\neq$ gap；缺卡 $\neq$ 没报告
+    \end{block}
+
+    \column{.31\textwidth}
+    \scriptsize
+    \begin{block}{推荐 + 精读}
+      按可信度：nearest $>$ 引文链 $>$ 边界命中。\\
+      给 5 篇：3 篇最接近但没解决，2 篇最可能否定我。
+      \vspace{0.3em}
+      读 \texttt{md} 不读 PDF；\\
+      引用数字先看\textbf{分母与条件}；\\
+      一次只读 3 篇，写一页对照表。
+    \end{block}
+
+    \column{.34\textwidth}
+    \scriptsize
+    \begin{block}{回检：有没有人做过}
+      \textbf{本地}：中文正向、英文标准、英文同义、反向表述各查一次，
+      分 support / counter / nearest / 无关。\alert{grep 0 命中只说明词不对}。\\
+      \textbf{外部}：同四表述查 Semantic Scholar / arXiv，
+      标任务是否同构。\\
+      \textbf{判定}只有四档：\texttt{addressed} /
+      \texttt{partly\_addressed} / \texttt{open\_candidate} /
+      \texttt{unverified}
+    \end{block}
+  \end{columns}
+
+  \vspace{0.2em}
+  {\scriptsize \texttt{open\_candidate} 不是「世界空白」，是「我查过的范围内没有」：可写 to the best of our knowledge，不能写 no one has studied。}
+\end{frame}
+
+\begin{frame}{维护：只增量，写操作先报计划}
+  \vspace{-2pt}
+  \begin{columns}[T]
+    \column{.5\textwidth}
+    \scriptsize
+    \begin{block}{每周九步（自动化为主）}
+      检索与去重 $\to$ 范围/venue 门槛 $\to$ 候选报告并\textbf{等用户入库}
+      $\to$ Zotero 体检与分流（需批准）$\to$ PDF 对账（需批准）
+      $\to$ MinerU 解析 $\to$ 证据卡复核 $\to$ 切片与同步（需批准）
+      $\to$ 写更新记录
+    \end{block}
+
+    \column{.46\textwidth}
+    \footnotesize
+    \begin{block}{三条硬规矩}
+      \scriptsize
+      \begin{itemize}
+        \item 只增量，不整库重跑
+        \item Zotero / 集合 / Dify 全部先展示计划再执行
+        \item \textbf{服务故障 $\neq$ 语料缺失}：Dify 挂了就停在当前阶段
+      \end{itemize}
+    \end{block}
+
+    \begin{alertblock}{时间成本（要讲出来）}
+      \scriptsize
+      首次 1--2 天（解析 + 元数据 + 卡片）；\\
+      之后每周 30--60 分钟。\\
+      成本在\textbf{元数据核对}，不在解析。
+    \end{alertblock}
+  \end{columns}
+
+  \vspace{0.3em}
+  {\scriptsize 模型负责找、比、挑错；人负责读透、判断、拍板。}
+\end{frame}

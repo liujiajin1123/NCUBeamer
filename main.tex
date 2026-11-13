@@ -3,8 +3,8 @@
 
 %% --------------------------------------------------------------------------------
 %% 基于 NCUBeamer (SJTUBeamer) 模板
-%% 汇报主题：PPOM-Attack (IEEE TIFS 2026)
-%% 时长：10 分钟
+%% 汇报主题：文献仓库 + codex + agent 工作流
+%% 页数：10 页（含封面与结尾），约 12 分钟
 %% --------------------------------------------------------------------------------
 
 \documentclass[xcolor=table,dvipsnames,svgnames,aspectratio=169]{ctexbeamer}
@@ -95,36 +95,14 @@
 \begin{frame}
   \vfill
   \centering
-  {\large PPOM-ATTACK: A Substitute Model-Free Perturbation Prediction and Optimization Method  for Black-Box Adversarial Attack Against  Face Recognition\par}
-  \vspace{0.2cm}
-  {\normalsize Ke Cheng, Jixin Zhang, Haiyun Li, Zipeng Zhong, Mingwu Zhang, Zheng Qin\par}
-  \vspace{0.5cm}
-  {\normalsize \textit{IEEE Transactions on Information Forensics and Security}, 2026\par}
+  {\large 从文献仓库到选题：\\[0.2em]
+   用 codex 与 agent 把「找论文」变成「查行号」\par}
   \vfill
-  2026 年 10 月\par
+  组会分享 \;|\; 2026 年 11 月\par
   \vfill
 \end{frame}
 
-\include{contents/ppom}
-
-\begin{frame}
-  \frametitle{参考文献}
-  \footnotesize
-  \begin{thebibliography}{99}
-    \setbeamertemplate{bibliography item}[text]
-    \bibitem{ppom} K. Cheng, J. Zhang, H. Li, Z. Zhong, M. Zhang, and Z. Qin,
-    ``PPOM-Attack: A Substitute Model-Free Perturbation Prediction and
-    Optimization Method for Black-Box Adversarial Attack Against Face Recognition,''
-    \emph{IEEE Trans. Inf. Forensics Security}, 2026.
-    \newblock DOI: 10.1109/TIFS.2026.3666853
-    \bibitem{pgd} A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu,
-    ``Towards deep learning models resistant to adversarial attacks,'' ICLR 2018.
-    \bibitem{clip2protect} \emph{Clip2Protect}, CVPR 2023.
-    \bibitem{advdiff} \emph{AdvDiffusion}, AAAI 2024.
-    \bibitem{trades} H. Zhang \emph{et al.}, ``Theoretically principled trade-off
-    between robustness and accuracy,'' ICML 2019.
-  \end{thebibliography}
-\end{frame}
+\include{contents/litrepo}
 
 \makebottom
 
