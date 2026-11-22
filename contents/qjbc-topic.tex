@@ -28,32 +28,32 @@
   {\small 这不是普通单目标 impersonation，而是要求两个条件\textbf{同时跨过各自决策边界}的双目标攻击。}
 \end{frame}
 
-% ---------- 3. 问题起点（现象 + 平均目标为何失效） ----------
-\begin{frame}{问题起点：平均分数改善 $\neq$ 联合跨界}
+% ---------- 3. 问题起点（工作一损失如何导致现象） ----------
+\begin{frame}{问题起点：工作一的损失为什么会留下源身份}
   \vspace{-4pt}
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
     \footnotesize\textbf{现象（第一项工作）：} 攻击脸过了 target 接受阈值却常没甩掉源身份（identity overlay）——
     全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。
-    工作一仅作描述性现象，本工作\textbf{升级为显式双目标}：target accept 与 source reject 必须同时成立。
   \end{beamercolorbox}
-  \vspace{0.4em}
+  \vspace{0.3em}
 
-  \small\textbf{为什么“把所有分数加起来优化”救不了：}
-  \vspace{0.2em}
-  \begin{itemize}\setlength{\itemsep}{2pt}\small
-    \item DiffAIM 对每个代理 $k$ 先算“冒充分减逃逸分”，再加权求和成一个总分——
-          \textbf{式中没有阈值、没有“取最差”}，优化它只让总分变大：
-    \[
-    \text{score}_k = s_{\text{target},k}-s_{\text{source},k}+1,
-    \qquad
-    L_{\text{id}}=\sum_k w_k\,\text{score}_k
-    \]
-    \vspace{-0.5em}
-    {\footnotesize $w_k$：各代理的自适应权重。但决定攻击成败的是\textbf{最差的那项约束}。}
-    \item 反例：$m_t=+0.30$（target 已过线）、$m_s=-0.05$（source 未拒绝）；继续拉高 target，
-          总分仍在变好，\textbf{联合失败状态不变}——更新都流向已过线的一侧，最差短板没人补。
+  \small\textbf{回到第一项工作的损失函数，找现象的原因：}
+  \vspace{-0.1em}
+  \[
+  \mathcal L_{\mathrm{id}}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})
+  +\lambda_s\,[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
+  \]
+  \vspace{-0.7em}
+  {\footnotesize $[\,x\,]_+=\max(x,0)$；$k$ 为代理模型，集成时对各代理加权求和。}
+  \vspace{0.25em}
+
+  \begin{itemize}\setlength{\itemsep}{2pt}\footnotesize
+    \item 第一项\textbf{只把 target 相似度往上拉}；第二项是方向性 hinge——只要 target 比 source 高出 margin $m$ 即关闭，
+          拉高 target 或压低 source 都能满足它，\textbf{没有任何一项要求 source 相似度低于阈值}。
+    \item 后果：hinge 关闭后优化结束，source 相似度可以一直很高——overlay 不是意外，而是该损失的\textbf{直接产物}；
+          它优化的是“target 比 source 高多少”的排序，而第 2 页联合判据要求\textbf{两个绝对阈值同时跨过}，两者天然错位。
     \item 不同 FR 的分数尺度不同，不能直接平均；用第 2 页的裕量（离各自及格线的距离）统一口径后，
-          改为\textbf{只优化最差的一项}。
+          改为\textbf{只优化最差的一项}，让 source-reject 成为硬约束而不是 hinge 的副产品。
   \end{itemize}
 \end{frame}
 
