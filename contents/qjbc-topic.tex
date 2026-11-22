@@ -27,64 +27,39 @@
   {\small 这不是普通单目标 impersonation，而是要求两个条件\textbf{同时跨过各自决策边界}的双目标攻击。}
 \end{frame}
 
-% ---------- 3. 为什么平均目标不够 ----------
+% ---------- 3. 问题起点（现象 + 平均目标为何失效） ----------
 \begin{frame}{问题起点：平均分数改善 $\neq$ 联合跨界}
-  \vspace{-6pt}
-  \begin{columns}[T]
-    \column{.52\textwidth}
-    DiffAIM 类方法对多代理分数做加权/平均，回答的是“总体分数是否改善”；
-    决定成败的却是最差约束：
-    \[
-    m_t=+0.30,\quad m_s=-0.05
-    \]
-    target 已充分满足、source 仍未拒绝；继续拉高 target，
-    平均目标仍在变好，\textbf{联合失败状态不变}。
-    \vspace{0.5em}
-
-    不同 FR 的分数范围、及格线各不相同，原始分数不能直接平均。
-    统一换算成\textbf{“离自己的及格线差多少”}（裕量 $=$ 分数 $-$ 阈值，
-    正=过线、负=没过），再优化最差的一项。
-
-    \column{.48\textwidth}
-    \centering
-    \begin{tikzpicture}[>=Stealth,font=\footnotesize,x=0.66cm,y=0.66cm]
-      \draw[->] (0,0) -- (4.2,0) node[right]{$m_t$};
-      \draw[->] (0,0) -- (0,3.4) node[above]{$m_s$};
-      \fill[green!18] (0,0) rectangle (4.2,3.4);
-      \fill[red!15] (-2.2,0) rectangle (0,3.4);
-      \fill[red!15] (0,-1.4) rectangle (4.2,0);
-      \fill[red!15] (-2.2,-1.4) rectangle (0,0);
-      \node[align=center] at (2.1,3.0) {\textbf{联合成功}\\\footnotesize $m_t>0,\ m_s>0$};
-      \node[align=center] at (0.9,-1.05) {\footnotesize source 未拒绝};
-      \node[align=center] at (-1.1,1.7) {\footnotesize target 未接受};
-      \fill (1.7,1.2) circle (2.2pt) node[right,align=left]{\footnotesize 平均优化\\\footnotesize 可能停在这里};
-      \fill (3.3,-0.55) circle (2.2pt) node[above right]{\footnotesize 分数高但失败};
-      \draw[dashed] (0,-1.4) -- (0,3.4);
-      \draw[dashed] (-2.2,0) -- (4.2,0);
-    \end{tikzpicture}
-  \end{columns}
-\end{frame}
-
-% ---------- 4. 选题如何形成（仅主线） ----------
-\begin{frame}{选题形成：从工作一的现象到工作二的目标}
   \vspace{-4pt}
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \footnotesize\textbf{第一项工作的种子发现：} 上述「一侧过线、一侧没过」的身份叠加（identity overlay）
-    在工作一实验中普遍存在——全脸修改下，FaceNet ASR 77\% 时真正实现身份替换的仅 38\%（400 对，FAR=0.01），
-    局部修改时比例更高。工作一仅把它作为\textbf{描述性现象}报告，工作二\textbf{升级为显式双目标}：
-    target accept 与 source reject 必须同时成立。
+    \footnotesize\textbf{现象（第一项工作）：} 攻击脸过了 target 接受阈值却常没甩掉源身份（identity overlay）——
+    全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。
+    工作一仅作描述性现象，本工作\textbf{升级为显式双目标}：target accept 与 source reject 必须同时成立。
   \end{beamercolorbox}
-  \vspace{0.2em}
+  \vspace{0.6em}
 
-  \footnotesize 机制分析与排除：冒充与逃逸梯度在 latent 上\textbf{高度重叠}，看似存在同时推动两个目标的共同位置；
+  \small\textbf{为什么平均式目标救不了：}
+  \vspace{0.2em}
+  \begin{itemize}\setlength{\itemsep}{4pt}\small
+    \item DiffAIM 类方法对多代理分数加权/平均，回答“总体分数是否改善”；但决定成败的是\textbf{最差约束}。
+    \item 反例：$m_t=+0.30$（target 已过线）、$m_s=-0.05$（source 未拒绝）；继续拉高 target，
+          平均目标仍在变好，\textbf{联合失败状态不变}。
+    \item 不同 FR 的分数尺度不同，须统一换算成“离各自及格线差多少”
+          （裕量 $=$ 分数 $-$ 阈值，正=过线、负=没过），再优化最差的一项。
+  \end{itemize}
+\end{frame}
+
+% ---------- 4. 选题形成（机制排除 + 转向与验证） ----------
+\begin{frame}{选题形成：从机制排除到目标重构}
+  \vspace{-4pt}
+  \footnotesize\textbf{机制排除：} 冒充与逃逸梯度在 latent 上\textbf{高度重叠}，看似存在能同时推动两个目标的共同位置；
   但只在重叠区更新时，target 裕量已达 $+0.15$，source-reject 裕量仍为 $-0.34$（缺口仅补 0.84\%），
   \textbf{联合成功率始终为 0}。$\Rightarrow$ 更新被已过线的 target 侧吃掉，瓶颈不是“在哪里改”，
   而是\textbf{平均式目标不优先补最差短板}，于是改为\textbf{直接优化最差决策裕量}：
-  \vspace{0.25em}
+  \vspace{0.4em}
 
   \scriptsize
   \setlength{\tabcolsep}{5pt}
-  \renewcommand{\arraystretch}{1.0}
+  \renewcommand{\arraystretch}{1.1}
   \begin{tabular}{p{1.8cm}p{6.2cm}p{4.2cm}}
     \toprule
     阶段 & 问题与结果 & 沉淀 \\
@@ -93,9 +68,9 @@
     多身份对留出验证 & 改善是否跨身份对、跨留出代理稳定；15 个身份对全部改善，但 FaceNet 仍 0/45 & 瓶颈是代理—目标\textbf{边界偏差} \\
     \bottomrule
   \end{tabular}
-  \vspace{0.3em}
+  \vspace{0.6em}
 
-  \scriptsize 逻辑链：
+  \footnotesize 逻辑链：
   \textbf{平均目标与联合判据错位} $\to$ W 修代理侧最差约束
   $\to$ 留出实验证明非过拟合 $\to$ FaceNet 仍 0/45
   $\to$ 需\textbf{少量目标信息}修正边界偏差 $\to$ 后期\textbf{低维 guidance 校正}。
