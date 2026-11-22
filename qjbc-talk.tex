@@ -1,0 +1,71 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+
+%% 第二项工作选题汇报（组会，10 页内）
+%% 基于 NCUBeamer 权威模板样式（与 main.tex / litrepo 分支同一套 NCU 定制）
+%% 内容见 contents/qjbc-topic.tex
+
+\documentclass[xcolor=table,dvipsnames,svgnames,aspectratio=169]{ctexbeamer}
+
+\usepackage{tikz}
+\usepackage[normalem]{ulem}
+\usetikzlibrary{arrows.meta}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{hyperref}
+
+\usetheme[max,blue]{sjtubeamer}
+\setbeamertemplate{logo}{}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=0.9cm,sep=4pt]{palette primary}
+    \hspace{0.3cm}\includegraphics[height=0.65cm]{vi/ncu-vi.png}
+  \end{beamercolorbox}
+}
+
+% NCU: 结尾页“谢谢”上方显示校徽
+\renewcommand{\bottompagelogo}{\includegraphics{vi/ncu-logo.png}}
+
+% NCU: 封面/正文背景为纯白图片
+\setbeamertemplate{background canvas}{%
+  \includegraphics[width=\paperwidth,height=\paperheight]{vi/ncu-cover-bg.png}
+}
+
+\graphicspath{{figures/}}
+
+\hypersetup{unicode=true}
+
+\author{汇报人：（请替换姓名）}
+\institute[]{南昌大学}
+\date{2026 年 11 月}
+\subject{第二项工作选题汇报}
+\keywords{人脸对抗攻击, 联合边界, 低查询黑盒攻击, 扩散模型}
+
+\title[低查询联合边界校正选题汇报]{面向越权身份冒充与归因规避的低查询联合边界校正}
+
+\begin{document}
+
+% 10 分钟报告：不使用每节自动插入的目录页
+
+% NCU: 封面
+\begin{frame}
+  \vfill
+  \centering
+  {\Large\bfseries 面向越权身份冒充与归因规避的\\[0.25em]
+   低查询联合边界校正\par}
+  \vspace{0.6em}
+  {\normalsize Query-Efficient Joint-Boundary Correction for\\
+   Attribution-Evasive Face Impersonation\par}
+  \vfill
+  第二项工作选题汇报 \;|\; 2026 年 11 月\par
+  \vfill
+\end{frame}
+
+\include{contents/qjbc-topic}
+
+\makebottom
+
+\end{document}

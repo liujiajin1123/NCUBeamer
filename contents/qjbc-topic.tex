@@ -1,0 +1,243 @@
+﻿% !TeX encoding = UTF-8
+% !TeX root = ../qjbc-talk.tex
+% 第二项工作选题汇报：为什么做 / 受什么启发 / 可行性（9 个内容帧，封面与结尾由入口提供）
+
+% ---------- 1. 攻击场景与双目标 ----------
+\begin{frame}{攻击场景：一个攻击，两个安全目标}
+  \textbf{攻击者设定}：已登记的低权限用户，系统中保存其源身份模板；
+  生成一张自然人脸，同时实现
+  \vspace{0.4em}
+  \begin{itemize}
+    \item \textbf{Privilege escalation（越权冒充）}：认证入口被接受为\textbf{高权限目标身份}
+    \item \textbf{Attribution evasion（归因规避）}：审计入口\textbf{不再关联回自己的源身份}
+  \end{itemize}
+  \vspace{0.3em}
+  给定目标 FR 模型 $f_v$ 与阈值 $\tau_v$，定义两个决策裕量：
+  \[
+  m_t = s_t-\tau_v \quad\text{（target accept）},
+  \qquad
+  m_s = \tau_v-s_s \quad\text{（source reject）}
+  \]
+  \[
+  \boxed{\,m_{\mathrm{joint}}=\min(m_t,m_s)>0
+  \;\Longleftrightarrow\;
+  \text{联合攻击成功}\,}
+  \]
+  \vspace{0.2em}
+  {\small 这不是普通单目标 impersonation，而是要求两个条件\textbf{同时跨过各自决策边界}的双目标攻击。}
+\end{frame}
+
+% ---------- 3. 为什么平均目标不够 ----------
+\begin{frame}{问题起点：平均分数改善 $\neq$ 联合跨界}
+  \vspace{-6pt}
+  \begin{columns}[T]
+    \column{.52\textwidth}
+    DiffAIM 类方法对多代理分数做加权/平均，回答的是“总体分数是否改善”；
+    决定成败的却是最差约束：
+    \[
+    m_t=+0.30,\quad m_s=-0.05
+    \]
+    target 已充分满足、source 仍未拒绝；继续拉高 target，
+    平均目标仍在变好，\textbf{联合失败状态不变}。
+    \vspace{0.5em}
+
+    不同 FR 的分数范围、及格线各不相同，原始分数不能直接平均。
+    统一换算成\textbf{“离自己的及格线差多少”}（裕量 $=$ 分数 $-$ 阈值，
+    正=过线、负=没过），再优化最差的一项。
+
+    \column{.48\textwidth}
+    \centering
+    \begin{tikzpicture}[>=Stealth,font=\footnotesize,x=0.66cm,y=0.66cm]
+      \draw[->] (0,0) -- (4.2,0) node[right]{$m_t$};
+      \draw[->] (0,0) -- (0,3.4) node[above]{$m_s$};
+      \fill[green!18] (0,0) rectangle (4.2,3.4);
+      \fill[red!15] (-2.2,0) rectangle (0,3.4);
+      \fill[red!15] (0,-1.4) rectangle (4.2,0);
+      \fill[red!15] (-2.2,-1.4) rectangle (0,0);
+      \node[align=center] at (2.1,3.0) {\textbf{联合成功}\\\footnotesize $m_t>0,\ m_s>0$};
+      \node[align=center] at (0.9,-1.05) {\footnotesize source 未拒绝};
+      \node[align=center] at (-1.1,1.7) {\footnotesize target 未接受};
+      \fill (1.7,1.2) circle (2.2pt) node[right,align=left]{\footnotesize 平均优化\\\footnotesize 可能停在这里};
+      \fill (3.3,-0.55) circle (2.2pt) node[above right]{\footnotesize 分数高但失败};
+      \draw[dashed] (0,-1.4) -- (0,3.4);
+      \draw[dashed] (-2.2,0) -- (4.2,0);
+    \end{tikzpicture}
+  \end{columns}
+\end{frame}
+
+% ---------- 4. 选题如何形成（仅主线） ----------
+\begin{frame}{选题形成：从工作一的现象到工作二的目标}
+  \vspace{-4pt}
+  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
+    \footnotesize\textbf{第一项工作的种子发现：} 攻击脸过了 target 接受阈值，却常没甩掉源身份（identity overlay）。
+    该现象在全脸修改下依然存在：全局攻击 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）；
+    局部修改时因大部分人脸被保留，overlay 更普遍。
+    工作一仅作\textbf{描述性现象}，工作二\textbf{升级为显式双目标}：target accept 与 source reject 必须同时成立。
+  \end{beamercolorbox}
+  \vspace{0.2em}
+
+  \footnotesize 机制分析与排除：冒充与逃逸梯度在 latent 上\textbf{高度重叠}，看似存在同时推动两个目标的共同位置；
+  但只在重叠区更新时，target 裕量已达 $+0.15$，source-reject 裕量仍为 $-0.34$（缺口仅补 0.84\%），
+  \textbf{联合成功率始终为 0}。$\Rightarrow$ 更新被已过线的 target 侧吃掉，瓶颈不是“在哪里改”，
+  而是\textbf{平均式目标不优先补最差短板}，于是改为\textbf{直接优化最差决策裕量}：
+  \vspace{0.25em}
+
+  \scriptsize
+  \setlength{\tabcolsep}{5pt}
+  \renewcommand{\arraystretch}{1.0}
+  \begin{tabular}{p{1.8cm}p{6.2cm}p{4.2cm}}
+    \toprule
+    阶段 & 问题与结果 & 沉淀 \\
+    \midrule
+    单身份对试跑 & 平均双 loss 改为最差决策裕量；训练侧明显改善，但疑似对个别身份对/代理过拟合 & 需多身份对留出验证 \\
+    多身份对留出验证 & 改善是否跨身份对、跨留出代理稳定；15 个身份对全部改善，但 FaceNet 仍 0/45 & 瓶颈是代理—目标\textbf{边界偏差} \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.3em}
+
+  \scriptsize 逻辑链：
+  \textbf{平均目标与联合判据错位} $\to$ W 修代理侧最差约束
+  $\to$ 留出实验证明非过拟合 $\to$ FaceNet 仍 0/45
+  $\to$ 需\textbf{少量目标信息}修正边界偏差 $\to$ 后期\textbf{低维 guidance 校正}。
+\end{frame}
+
+% ---------- 5. 证据（一）：代理侧 ----------
+\begin{frame}{证据（一）：联合边界目标在代理侧确实有效}
+  覆盖 15 个身份对、5 组目标身份，共 135 组实验；每组固定 300 次反向优化，全程不查询目标模型。
+  \vspace{0.4em}
+  \begin{center}
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \begin{tabular}{lccc}
+      \toprule
+      方法 & worst margin 中位数 & joint success & 含义 \\
+      \midrule
+      J：平均 hinge 双目标       & $-0.0192$ & 19/45 & 平均目标掩盖最差约束 \\
+      WM：校准裕量求平均         & $-0.0926$ & 11/45 & 仅换参数化不够 \\
+      \textbf{W：soft-min 最差裕量} & \textbf{$+0.0694$} & \textbf{36/45} & 唯一使最差裕量中位数转正 \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \vspace{0.3em}
+  \begin{itemize}
+    \item W$-$J 训练裕量中位差 $+0.1106$：45 个留出配置中 41 个为正，15 个身份对全部为正
+    \item 结论（受限）：W 对齐了“所有条件同时成立”的训练目标，\\
+          但\textbf{仅支持 surrogate feasibility，不等于黑盒攻击成功}
+  \end{itemize}
+\end{frame}
+
+% ---------- 6. 证据（二）：留出实验与 FaceNet ----------
+\begin{frame}{证据（二）：改善可迁移，但跨不过真实目标边界}
+  \begin{columns}[T]
+    \column{.52\textwidth}
+    \small\textbf{留出单个代理模型的测试}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item 留出模型的联合裕量在 \textbf{15 个身份对上全部改善}
+      \item 45 个留出配置中 39 个改善、6 个退化；按目标身份聚类的 95\% 置信区间不含 0
+      \item 但绝对成功仅 \textbf{1/45}，裕量中位数仍为 $-0.247$
+    \end{itemize}
+    \vspace{0.3em}
+    $\Rightarrow$ 排除“只过拟合参与优化的模型”和“单个身份对偶然”两种解释。
+
+    \column{.48\textwidth}
+    \small\textbf{外部 FaceNet（未参与任何训练）}
+    \vspace{0.2em}
+    \begin{center}
+      \small
+      \begin{tabular}{lcc}
+        \toprule
+        方法 & joint margin 中位数 & success \\
+        \midrule
+        J  & $-0.2597$ & 0/45 \\
+        WM & $-0.2719$ & 0/45 \\
+        W  & $\mathbf{-0.2406}$ & \textbf{0/45} \\
+        \bottomrule
+      \end{tabular}
+    \end{center}
+    W$-$J 的 FaceNet CI 跨 0：相似度改善方向不一致、有正有负，\textbf{不构成稳定迁移}。
+  \end{columns}
+  \vspace{0.3em}
+
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
+    \centering\bfseries\small
+    训练侧 36/45 成功 $\;\longrightarrow\;$ FaceNet 0/45 跨界：清晰的 train--victim gap，
+    问题已从“代理优化不收敛”变为“代理可行域与真实决策边界不重合”。
+  \end{beamercolorbox}
+\end{frame}
+
+% ---------- 7. 拟议方法（含机制诊断） ----------
+\begin{frame}{拟议方法：两阶段框架}
+  {\footnotesize 机制前提：约 \textbf{69\%} 最差约束来自 source-reject，soft-min 存在 harmful focusing
+   （45 个配置中 36 个 target margin 下降）——继续堆 W 会加剧偏置，必须引入目标侧反馈。}
+  \vspace{0.3em}
+  \small\textbf{阶段一：代理侧联合边界预优化（0 目标查询）}
+  \begin{itemize}\setlength{\itemsep}{2pt}\small
+    \item 复用 DiffAIM 生成器与代理 FR 集合，阈值校准后优化
+          $\max_x \operatorname{softmin}_{k,r} m_{k,r}(x)$
+    \item 产出一组代理可行的自然候选，作为接近可行域的\textbf{起点}
+  \end{itemize}
+  \vspace{0.2em}
+  \small\textbf{阶段二：后期低维 guidance 的低查询校正}
+  \begin{itemize}\setlength{\itemsep}{2pt}\small
+    \item 冻结反演、噪声与大部分扩散轨迹，只开放后期身份敏感时间步的少量系数：
+          $\theta=[\alpha_{t_1}^{target},\alpha_{t_1}^{source},\ldots]$，维度 $d$ 很小
+    \item 每个候选向目标模型分别查询 target、source 两次相似度（\textbf{按 2 次查询计数}），
+          优化 $J_v(\theta)=\min(m_t^v,m_s^v)-\lambda_q Q(\theta)$
+    \item 求解器先用随机搜索/SPSA/CMA-ES 等通用方法，\textbf{不把求解器当贡献}
+  \end{itemize}
+  \vspace{0.15em}
+  {\footnotesize 停止条件：裕量跨 0 / 达到查询预算 / 质量约束触发；成功与失败样本都报告。}
+\end{frame}
+
+% ---------- 9. 启发与文献定位 ----------
+\begin{frame}{受什么启发：四条成熟路线的适配，而非现成答案}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.15}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{p{3.2cm}p{4.5cm}p{3.9cm}}
+    \toprule
+    已有路线 & 代表工作与用法 & 对本工作的适配 \\
+    \midrule
+    迁移先验 + victim 查询修正 & TREMBA、LeBA：surrogate 低维嵌入起步，查询反馈修正偏差 & W 候选作为起点，查询只更新 guidance 系数 \\
+    低维 score-based 黑盒优化 & AutoZOOM、DifAttack：压缩搜索空间，只调 adversarial 分量 & 扩散时间窗 guidance 即天然低维控制接口 \\
+    FR 场景低查询边界搜索 & Dong CVPR'19、QEBA、GADA、RAF：几何/低频/UV/语义结构降维 & 把任务结构迁移到扩散时间—身份引导结构 \\
+    扩散潜空间自然攻击 & DiffAIM、DiffAttack、DiffAM、CDMA：扩散载体保证自然性 & 复用生成框架，只改决策目标与反馈方式 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.3em}
+  \begin{itemize}\setlength{\itemsep}{2pt}\small
+    \item 最接近的结构先例（Wei TPAMI'23）：surrogate 起点 + 少量变量 + 目标反馈，部分设置平均仅 11 次查询，\\
+          但只做单目标 patch 攻击，\textbf{不能}推出双身份联合裕量与 diffusion 子空间有效
+    \item 汇报口径：\textbf{组合原则有充分先例；“扩散轨迹中的双身份联合边界低查询校正”尚无直接替代工作，
+          正式新颖性审计完成前不使用“首次提出”}
+  \end{itemize}
+\end{frame}
+
+% ---------- 10. 可行性、风险与下一步 ----------
+\begin{frame}{可行性、风险与下一步}
+  \begin{columns}[T]
+    \column{.5\textwidth}
+    \footnotesize\textbf{可行性依据}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item 工程：DiffAIM 反演/生成、代理模型集成、三种目标函数（J/WM/W）与留出实验流程均已跑通，已验证 135 组实验规模的编排能力
+      \item 实现：复用已保存的反演结果，仅后期时间窗重放；先随机搜索起步，无需训练新网络
+      \item 科学：W 已把大量样本推入代理可行域，留出实验显示方向可迁移，FaceNet 裕量混合改善而非恶化——留有校正空间
+    \end{itemize}
+
+    \column{.5\textwidth}
+    \footnotesize\textbf{主要风险与控制}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item 审计侧 score 可能不开放 $\to$ 明确 score-based 假设，decision-only 列为后续扩展
+      \item 低维子空间不够表达 $\to$ 与随机同维/更宽窗口做 oracle 诊断
+      \item 通用黑盒优化即可达成 $\to$ 同维度同预算 baseline 正面对比
+      \item W 起点无必要 $\to$ DiffAIM/J/W 三种初始化进同一校正器
+    \end{itemize}
+  \end{columns}
+  \vspace{0.2em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
+    \centering\footnotesize
+    下一步中心问题：\textbf{相同查询与质量预算下，少量 victim 反馈能否把“代理已改善、FaceNet 未跨界”的样本推过真实联合边界？}\\
+    {\footnotesize 判定只看两项：是否产生新的 victim joint success；每次成功花费多少查询。}
+  \end{beamercolorbox}
+\end{frame}
+
