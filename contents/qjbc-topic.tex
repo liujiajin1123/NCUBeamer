@@ -28,32 +28,31 @@
   {\small 这不是普通单目标 impersonation，而是要求两个条件\textbf{同时跨过各自决策边界}的双目标攻击。}
 \end{frame}
 
-% ---------- 3. 问题起点（工作一损失如何导致现象） ----------
-\begin{frame}{问题起点：工作一的损失为什么会留下源身份}
+% ---------- 3. 问题起点（现象如何随威胁模型升级为问题） ----------
+\begin{frame}{问题起点：旧现象在新威胁模型下变成失败模式}
   \vspace{-4pt}
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \footnotesize\textbf{现象（第一项工作）：} 攻击脸过了 target 接受阈值却常没甩掉源身份（identity overlay）——
-    全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。
+    \footnotesize\textbf{第一项工作的观察：} 攻击脸过了 target 接受阈值却常没甩掉源身份（identity overlay）——
+    全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。该工作只做 target 对齐，
+    overlay 是被如实记录的\textbf{描述性现象}，不是它要解决的问题。
   \end{beamercolorbox}
-  \vspace{0.3em}
+  \vspace{0.4em}
 
-  \small\textbf{回到第一项工作的损失函数，找现象的原因：}
+  \small\textbf{先看它的损失为什么天然会留下 source（$[x]_+=\max(x,0)$，hinge 只要求 target 比 source 高出 margin $m$）：}
   \vspace{-0.1em}
   \[
   \mathcal L_{\mathrm{id}}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})
   +\lambda_s\,[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
   \]
-  \vspace{-0.7em}
-  {\footnotesize $[\,x\,]_+=\max(x,0)$；$k$ 为代理模型，集成时对各代理加权求和。}
-  \vspace{0.25em}
+  \vspace{-0.4em}
+  {\footnotesize 拉 target 或压 source 都能满足 hinge——\textbf{没有 source 侧的绝对阈值约束}，这是与其一项目标匹配的设计。}
+  \vspace{0.3em}
 
-  \begin{itemize}\setlength{\itemsep}{2pt}\footnotesize
-    \item 第一项\textbf{只把 target 相似度往上拉}；第二项是方向性 hinge——只要 target 比 source 高出 margin $m$ 即关闭，
-          拉高 target 或压低 source 都能满足它，\textbf{没有任何一项要求 source 相似度低于阈值}。
-    \item 后果：hinge 关闭后优化结束，source 相似度可以一直很高——overlay 不是意外，而是该损失的\textbf{直接产物}；
-          它优化的是“target 比 source 高多少”的排序，而第 2 页联合判据要求\textbf{两个绝对阈值同时跨过}，两者天然错位。
-    \item 不同 FR 的分数尺度不同，不能直接平均；用第 2 页的裕量（离各自及格线的距离）统一口径后，
-          改为\textbf{只优化最差的一项}，让 source-reject 成为硬约束而不是 hinge 的副产品。
+  \begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
+    \item \textbf{威胁模型一变，现象的性质就变了：} 本工作要求归因规避，source reject 从“无关项”变成\textbf{硬约束}——
+          工作一里 38\% 以外那些“target 过线但 source 没甩掉”的样本，在新场景下\textbf{全部判为攻击失败}。
+    \item 排序型 hinge 表达不了“两个\textbf{绝对阈值}同时跨过”：target 比 source 高 $m$ 时两者可能都在源身份接受域内。
+          用第 2 页的裕量统一口径后，目标必须改为\textbf{只优化最差的一项}，让 source-reject 与 target-accept 地位对等。
   \end{itemize}
 \end{frame}
 
