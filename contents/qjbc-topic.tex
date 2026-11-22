@@ -37,14 +37,14 @@
   \end{beamercolorbox}
   \vspace{0.6em}
 
-  \small\textbf{为什么平均式目标救不了：}
+  \small\textbf{为什么“把所有分数加起来优化”救不了：}
   \vspace{0.2em}
   \begin{itemize}\setlength{\itemsep}{4pt}\small
-    \item DiffAIM 类方法对多代理分数加权/平均，回答“总体分数是否改善”；但决定成败的是\textbf{最差约束}。
+    \item DiffAIM 类方法把多个代理模型的各项分数加权平均成一个总分来优化，回答“总分是否改善”；但决定成败的是\textbf{最差的那项约束}。
     \item 反例：$m_t=+0.30$（target 已过线）、$m_s=-0.05$（source 未拒绝）；继续拉高 target，
-          平均目标仍在变好，\textbf{联合失败状态不变}。
+          总分仍在变好，\textbf{联合失败状态不变}——更新都流向已过线的一侧，最差短板没人补。
     \item 不同 FR 的分数尺度不同，须统一换算成“离各自及格线差多少”
-          （裕量 $=$ 分数 $-$ 阈值，正=过线、负=没过），再优化最差的一项。
+          （裕量 $=$ 分数 $-$ 阈值，正=过线、负=没过），改为\textbf{只优化最差的一项}。
   \end{itemize}
 \end{frame}
 
@@ -54,7 +54,7 @@
   \footnotesize\textbf{机制排除：} 冒充与逃逸梯度在 latent 上\textbf{高度重叠}，看似存在能同时推动两个目标的共同位置；
   但只在重叠区更新时，target 裕量已达 $+0.15$，source-reject 裕量仍为 $-0.34$（缺口仅补 0.84\%），
   \textbf{联合成功率始终为 0}。$\Rightarrow$ 更新被已过线的 target 侧吃掉，瓶颈不是“在哪里改”，
-  而是\textbf{平均式目标不优先补最差短板}，于是改为\textbf{直接优化最差决策裕量}：
+  而是\textbf{“总分优化”不优先补最差短板}，于是改为\textbf{只优化最差决策裕量}：
   \vspace{0.4em}
 
   \scriptsize
@@ -64,14 +64,14 @@
     \toprule
     阶段 & 问题与结果 & 沉淀 \\
     \midrule
-    单身份对试跑 & 平均双 loss 改为最差决策裕量；训练侧明显改善，但疑似对个别身份对/代理过拟合 & 需多身份对留出验证 \\
+    单身份对试跑 & “总分优化”改为只优化最差决策裕量；训练侧明显改善，但疑似对个别身份对/代理过拟合 & 需多身份对留出验证 \\
     多身份对留出验证 & 改善是否跨身份对、跨留出代理稳定；15 个身份对全部改善，但 FaceNet 仍 0/45 & 瓶颈是代理—目标\textbf{边界偏差} \\
     \bottomrule
   \end{tabular}
   \vspace{0.6em}
 
   \footnotesize 逻辑链：
-  \textbf{平均目标与联合判据错位} $\to$ W 修代理侧最差约束
+  \textbf{“总分优化”与联合判据错位} $\to$ W 修代理侧最差约束
   $\to$ 留出实验证明非过拟合 $\to$ FaceNet 仍 0/45
   $\to$ 需\textbf{少量目标信息}修正边界偏差 $\to$ 后期\textbf{低维 guidance 校正}。
 \end{frame}
@@ -87,8 +87,8 @@
       \toprule
       方法 & worst margin 中位数 & joint success & 含义 \\
       \midrule
-      J：平均 hinge 双目标       & $-0.0192$ & 19/45 & 平均目标掩盖最差约束 \\
-      WM：校准裕量求平均         & $-0.0926$ & 11/45 & 仅换参数化不够 \\
+      J：多代理分数加权平均 & $-0.0192$ & 19/45 & 总分掩盖最差约束 \\
+      WM：校准裕量求平均（对照）   & $-0.0926$ & 11/45 & 仅换参数化不够 \\
       \textbf{W：soft-min 最差裕量} & \textbf{$+0.0694$} & \textbf{36/45} & 唯一使最差裕量中位数转正 \\
       \bottomrule
     \end{tabular}
