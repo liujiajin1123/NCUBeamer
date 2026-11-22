@@ -37,7 +37,7 @@
   \begin{columns}[T]
     \column{.49\textwidth}
     \begin{block}{工作一（方向性铰链项）}
-      {\footnotesize\textbf{现象：} FaceNet 上 ASR 77\% 时真正身份替换仅 38\%（400 对，FAR=0.01），多数为 overlay。}
+      {\footnotesize\textbf{现象：} FaceNet 上 ASR 77\% 时真正身份替换仅 38\%（400 对，FAR=0.01），多数样本\textbf{同时挂着两个身份}——target 接受了、源身份却没甩掉（即身份叠加）。}
       {\footnotesize\textbf{损失（$[x]_+=\max(x,0)$）：} 只要求 target 比 source 高出 margin $m$，高出后惩罚归零，\textbf{不要求 source 低于阈值}：}
       \vspace{-0.5em}
       \[
@@ -49,7 +49,7 @@
     \column{.49\textwidth}
     \begin{block}{DiffAIM（差值打分）}
       {\footnotesize\textbf{1000 对实测（按双阈值分类）：} 仅 \textbf{612 对联合成功}（target 过、source 未过）；
-       37 对双过（overlay）；307 对双不过；44 对仅 source 过。}
+       37 对双过（两个身份都匹配，即身份叠加）；307 对双不过；44 对仅 source 过。}
       {\footnotesize\textbf{损失（$w_k$ 自适应权重）：} 含 $-S_{\mathrm{src}}$ 压源项，但只优化相对差值：}
       \vspace{-0.5em}
       \[
