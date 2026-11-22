@@ -41,26 +41,26 @@
   \vspace{0.2em}
 
   \begin{columns}[T]
-    \column{.5\textwidth}
-    \textbf{工作一（directional hinge）}
-    \vspace{0.15em}
+    \column{.49\textwidth}
+    \begin{block}{工作一（directional hinge）}
+      {\footnotesize target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：}
+      \vspace{-0.2em}
+      \[
+      \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
+      \]
+      \vspace{-0.8em}
+    \end{block}
 
-    {\footnotesize target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：}
-    \vspace{-0.3em}
-    \[
-    \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
-    \]
-
-    \column{.5\textwidth}
-    \textbf{DiffAIM（差值打分）}
-    \vspace{0.15em}
-
-    {\footnotesize 确有 $-S_{\mathrm{src}}$ 压源项（$w_k$ 自适应权重），但优化相对差值，两者可同时很高：}
-    \vspace{-0.3em}
-    \[
-    \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
-    \quad L_{2}=\textstyle\sum_k w_k\,\mathrm{score}_k
-    \]
+    \column{.49\textwidth}
+    \begin{block}{DiffAIM（差值打分）}
+      {\footnotesize 确有 $-S_{\mathrm{src}}$ 压源项（$w_k$ 自适应权重），但优化相对差值，两者可同时很高：}
+      \vspace{-0.2em}
+      \[
+      \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
+      \quad L_{2}=\textstyle\sum_k w_k\,\mathrm{score}_k
+      \]
+      \vspace{-0.8em}
+    \end{block}
   \end{columns}
   \vspace{0.1em}
 
