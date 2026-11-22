@@ -28,32 +28,37 @@
   {\small 这不是普通单目标 impersonation，而是要求两个条件\textbf{同时跨过各自决策边界}的双目标攻击。}
 \end{frame}
 
-% ---------- 3. 问题起点（现象如何随威胁模型升级为问题） ----------
-\begin{frame}{问题起点：旧现象在新威胁模型下变成失败模式}
+% ---------- 3. 问题起点（两类现有目标的共同结构缺口） ----------
+\begin{frame}{问题起点：两类现有目标都不保证联合跨界}
   \vspace{-4pt}
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \footnotesize\textbf{第一项工作的观察：} 攻击脸过了 target 接受阈值却常没甩掉源身份（identity overlay）——
-    全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。该工作只做 target 对齐，
-    overlay 是被如实记录的\textbf{描述性现象}，不是它要解决的问题。
+    \footnotesize\textbf{第一项工作的观察：} 全脸修改下 FaceNet ASR 77\% 时，真正身份替换仅 38\%（400 对，FAR=0.01），
+    多数样本 target 过线但 source 没甩掉（overlay）。本工作引入归因规避后，source reject 成为\textbf{硬约束}，这些样本全部判为失败。
   \end{beamercolorbox}
   \vspace{0.4em}
 
-  \small\textbf{先看它的损失为什么天然会留下 source（$[x]_+=\max(x,0)$，hinge 只要求 target 比 source 高出 margin $m$）：}
-  \vspace{-0.1em}
-  \[
-  \mathcal L_{\mathrm{id}}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})
-  +\lambda_s\,[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
-  \]
-  \vspace{-0.4em}
-  {\footnotesize 拉 target 或压 source 都能满足 hinge——\textbf{没有 source 侧的绝对阈值约束}，这是与其一项目标匹配的设计。}
-  \vspace{0.3em}
+  \small\textbf{两类现有身份目标，都不含决策阈值 $\tau$：}
+  \vspace{0.15em}
 
-  \begin{itemize}\setlength{\itemsep}{3pt}\footnotesize
-    \item \textbf{威胁模型一变，现象的性质就变了：} 本工作要求归因规避，source reject 从“无关项”变成\textbf{硬约束}——
-          工作一里 38\% 以外那些“target 过线但 source 没甩掉”的样本，在新场景下\textbf{全部判为攻击失败}。
-    \item 排序型 hinge 表达不了“两个\textbf{绝对阈值}同时跨过”：target 比 source 高 $m$ 时两者可能都在源身份接受域内。
-          用第 2 页的裕量统一口径后，目标必须改为\textbf{只优化最差的一项}，让 source-reject 与 target-accept 地位对等。
-  \end{itemize}
+  \footnotesize\textbullet~\textbf{工作一（directional hinge）：} target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：
+  \vspace{-0.2em}
+  \[
+  \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
+  \]
+  \vspace{-0.2em}
+
+  \footnotesize\textbullet~\textbf{DiffAIM（差值打分，$w_k$ 自适应权重）：} 确有 $-S_{\mathrm{src}}$ 压源项，但优化相对差值，$S_{\mathrm{tgt}}$ 与 $S_{\mathrm{src}}$ 可同时很高：
+  \vspace{-0.2em}
+  \[
+  \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
+  \qquad L_{2}=\sum_k w_k\,\mathrm{score}_k
+  \]
+  \vspace{-0.1em}
+
+  \begin{beamercolorbox}[wd=\textwidth,sep=3.5pt]{block body alerted}
+    \footnotesize\textbf{共同缺口：} 排序/差值结构表达不了“两个\textbf{绝对阈值}同时跨过”。
+    用第 2 页的裕量统一口径后，目标只能改为 $\max\,\min(m_t,m_s)$——让 target-accept 与 source-reject 地位对等，这就是联合边界目标。
+  \end{beamercolorbox}
 \end{frame}
 
 % ---------- 4. 选题形成（机制排除 + 转向与验证） ----------
