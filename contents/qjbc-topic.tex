@@ -36,12 +36,20 @@
     全脸修改下 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）。
     工作一仅作描述性现象，本工作\textbf{升级为显式双目标}：target accept 与 source reject 必须同时成立。
   \end{beamercolorbox}
-  \vspace{0.6em}
+  \vspace{0.4em}
 
   \small\textbf{为什么“把所有分数加起来优化”救不了：}
   \vspace{0.2em}
-  \begin{itemize}\setlength{\itemsep}{4pt}\small
-    \item DiffAIM 类方法把多个代理模型的各项分数加权平均成一个总分来优化，回答“总分是否改善”；但决定成败的是\textbf{最差的那项约束}。
+  \begin{itemize}\setlength{\itemsep}{2pt}\small
+    \item DiffAIM 对每个代理 $k$ 先算“冒充分减逃逸分”，再加权求和成一个总分——
+          \textbf{式中没有阈值、没有“取最差”}，优化它只让总分变大：
+    \[
+    \text{score}_k = s_{\text{target},k}-s_{\text{source},k}+1,
+    \qquad
+    L_{\text{id}}=\sum_k w_k\,\text{score}_k
+    \]
+    \vspace{-0.5em}
+    {\footnotesize $w_k$：各代理的自适应权重。但决定攻击成败的是\textbf{最差的那项约束}。}
     \item 反例：$m_t=+0.30$（target 已过线）、$m_s=-0.05$（source 未拒绝）；继续拉高 target，
           总分仍在变好，\textbf{联合失败状态不变}——更新都流向已过线的一侧，最差短板没人补。
     \item 不同 FR 的分数尺度不同，不能直接平均；用第 2 页的裕量（离各自及格线的距离）统一口径后，
