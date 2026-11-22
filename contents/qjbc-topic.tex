@@ -38,22 +38,31 @@
   \vspace{0.4em}
 
   \small\textbf{两类现有身份目标，都不含决策阈值 $\tau$：}
-  \vspace{0.15em}
+  \vspace{0.2em}
 
-  \footnotesize\textbullet~\textbf{工作一（directional hinge）：} target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：
-  \vspace{-0.2em}
-  \[
-  \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
-  \]
-  \vspace{-0.2em}
+  \begin{columns}[T]
+    \column{.5\textwidth}
+    \textbf{工作一（directional hinge）}
+    \vspace{0.15em}
 
-  \footnotesize\textbullet~\textbf{DiffAIM（差值打分，$w_k$ 自适应权重）：} 确有 $-S_{\mathrm{src}}$ 压源项，但优化相对差值，$S_{\mathrm{tgt}}$ 与 $S_{\mathrm{src}}$ 可同时很高：
-  \vspace{-0.2em}
-  \[
-  \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
-  \qquad L_{2}=\sum_k w_k\,\mathrm{score}_k
-  \]
-  \vspace{-0.1em}
+    {\footnotesize target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：}
+    \vspace{-0.3em}
+    \[
+    \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
+    \]
+
+    \column{.5\textwidth}
+    \textbf{DiffAIM（差值打分）}
+    \vspace{0.15em}
+
+    {\footnotesize 确有 $-S_{\mathrm{src}}$ 压源项（$w_k$ 自适应权重），但优化相对差值，两者可同时很高：}
+    \vspace{-0.3em}
+    \[
+    \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
+    \quad L_{2}=\textstyle\sum_k w_k\,\mathrm{score}_k
+    \]
+  \end{columns}
+  \vspace{0.1em}
 
   \begin{beamercolorbox}[wd=\textwidth,sep=3.5pt]{block body alerted}
     \footnotesize\textbf{共同缺口：} 排序/差值结构表达不了“两个\textbf{绝对阈值}同时跨过”。
