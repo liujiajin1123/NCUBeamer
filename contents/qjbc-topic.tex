@@ -12,7 +12,8 @@
     \item \textbf{Attribution evasion（归因规避）}：审计入口\textbf{不再关联回自己的源身份}
   \end{itemize}
   \vspace{0.3em}
-  给定目标 FR 模型 $f_v$ 与阈值 $\tau_v$，定义两个决策裕量：
+  给定目标 FR 模型 $f_v$ 与阈值 $\tau_v$，把相似度换算成\textbf{裕量}——即“分数离判定及格线的距离”
+  （正=过线、负=没过），得到两个决策裕量：
   \[
   m_t = s_t-\tau_v \quad\text{（target accept）},
   \qquad
@@ -43,8 +44,8 @@
     \item DiffAIM 类方法把多个代理模型的各项分数加权平均成一个总分来优化，回答“总分是否改善”；但决定成败的是\textbf{最差的那项约束}。
     \item 反例：$m_t=+0.30$（target 已过线）、$m_s=-0.05$（source 未拒绝）；继续拉高 target，
           总分仍在变好，\textbf{联合失败状态不变}——更新都流向已过线的一侧，最差短板没人补。
-    \item 不同 FR 的分数尺度不同，须统一换算成“离各自及格线差多少”
-          （裕量 $=$ 分数 $-$ 阈值，正=过线、负=没过），改为\textbf{只优化最差的一项}。
+    \item 不同 FR 的分数尺度不同，不能直接平均；用第 2 页的裕量（离各自及格线的距离）统一口径后，
+          改为\textbf{只优化最差的一项}。
   \end{itemize}
 \end{frame}
 
