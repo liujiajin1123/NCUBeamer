@@ -69,10 +69,10 @@
 \begin{frame}{选题形成：从工作一的现象到工作二的目标}
   \vspace{-4pt}
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \footnotesize\textbf{第一项工作的种子发现：} 攻击脸过了 target 接受阈值，却常没甩掉源身份（identity overlay）。
-    该现象在全脸修改下依然存在：全局攻击 FaceNet ASR 77\% 时，真正实现身份替换的仅 38\%（400 对，FAR=0.01）；
-    局部修改时因大部分人脸被保留，overlay 更普遍。
-    工作一仅作\textbf{描述性现象}，工作二\textbf{升级为显式双目标}：target accept 与 source reject 必须同时成立。
+    \footnotesize\textbf{第一项工作的种子发现：} 上述「一侧过线、一侧没过」的身份叠加（identity overlay）
+    在工作一实验中普遍存在——全脸修改下，FaceNet ASR 77\% 时真正实现身份替换的仅 38\%（400 对，FAR=0.01），
+    局部修改时比例更高。工作一仅把它作为\textbf{描述性现象}报告，工作二\textbf{升级为显式双目标}：
+    target accept 与 source reject 必须同时成立。
   \end{beamercolorbox}
   \vspace{0.2em}
 
