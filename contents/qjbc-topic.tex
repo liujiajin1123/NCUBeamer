@@ -30,41 +30,45 @@
 
 % ---------- 3. 问题起点（两类现有目标的共同结构缺口） ----------
 \begin{frame}{问题起点：两类现有目标都不保证联合跨界}
-  \vspace{-4pt}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \footnotesize\textbf{第一项工作的观察：} 全脸修改下 FaceNet ASR 77\% 时，真正身份替换仅 38\%（400 对，FAR=0.01），
-    多数样本 target 过线但 source 没甩掉（overlay）。本工作引入归因规避后，source reject 成为\textbf{硬约束}，这些样本全部判为失败。
+  \vspace{-8pt}
+  \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt]{block body example}
+    \footnotesize\textbf{第一项工作的观察：} FaceNet 上 ASR 77\% 时真正身份替换仅 38\%（400 对，FAR=0.01），
+    多数样本 target 过线但 source 没甩掉（overlay）；本工作引入归因规避后 source reject 成为\textbf{硬约束}，这些样本全部判为失败。
   \end{beamercolorbox}
-  \vspace{0.4em}
+  \vspace{0.1em}
 
   \small\textbf{两类现有身份目标，都不含决策阈值 $\tau$：}
   \vspace{0.2em}
 
   \begin{columns}[T]
     \column{.49\textwidth}
-    \begin{block}{工作一（directional hinge）}
-      {\footnotesize target 比 source 高出 margin $m$ 即关闭，无 source 绝对阈值（$[x]_+=\max(x,0)$）：}
-      \vspace{-0.2em}
+    \begin{block}{工作一（方向性铰链项）}
+      {\footnotesize 只要求 target 比 source 高出 margin $m$（$[x]_+=\max(x,0)$，高出后惩罚归零），\textbf{不要求 source 低于阈值}：}
+      \vspace{-0.5em}
       \[
       \mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})+\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+
       \]
-      \vspace{-0.8em}
+      \vspace{-1.1em}
     \end{block}
 
     \column{.49\textwidth}
     \begin{block}{DiffAIM（差值打分）}
-      {\footnotesize 确有 $-S_{\mathrm{src}}$ 压源项（$w_k$ 自适应权重），但优化相对差值，两者可同时很高：}
-      \vspace{-0.2em}
+      {\footnotesize 含 $-S_{\mathrm{src}}$ 压源项（$w_k$ 自适应权重），但只优化相对差值：}
+      \vspace{-0.5em}
       \[
       \mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1,
       \quad L_{2}=\textstyle\sum_k w_k\,\mathrm{score}_k
       \]
-      \vspace{-0.8em}
+      \vspace{-1.1em}
     \end{block}
   \end{columns}
-  \vspace{0.1em}
+  \vspace{-0.5em}
+  {\footnotesize\textbf{DiffAIM 1000 对实测（按双阈值分类）：}\textbf{612 overlay}（target 过、source 未过）；
+   37 双过；307 双不过；44 仅 source 过。}
+  \vspace{-0.2em}
+  \vspace{0.05em}
 
-  \begin{beamercolorbox}[wd=\textwidth,sep=3.5pt]{block body alerted}
+  \begin{beamercolorbox}[wd=\textwidth,sep=2.5pt]{block body alerted}
     \footnotesize\textbf{共同缺口：} 排序/差值结构表达不了“两个\textbf{绝对阈值}同时跨过”。
     用第 2 页的裕量统一口径后，目标只能改为 $\max\,\min(m_t,m_s)$——让 target-accept 与 source-reject 地位对等，这就是联合边界目标。
   \end{beamercolorbox}
