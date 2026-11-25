@@ -7,42 +7,34 @@
 % ============================================================
 % 1. 基本攻击类型与复合场景
 % ============================================================
-\begin{frame}{从两类基本攻击到不同层次的“复合”}
+\begin{frame}{冒充与逃逸组合后的四种判定结果}
   \scriptsize
-  现有综述通常按攻击目标将人脸识别对抗攻击分为两类：
-  \vspace{0.12em}
-  \begin{columns}[T]
-    \column{.48\textwidth}
-    \textbf{Dodging attack（逃逸）}\
-    拒绝源身份：$s(x_{adv},x_s)<\tau_v$；属于 untargeted attack。
+  \textbf{先约定：}source 指原身份，target 指希望冒充的身份；相似度 $s\ge\tau$ 表示系统接受，否则拒绝，$\tau$ 是接受阈值。
 
-    \column{.48\textwidth}
-    \textbf{Impersonation attack（冒充）}\
-    接受目标身份：$s(x_{adv},x_t)\ge\tau_v$；属于 targeted attack。
-  \end{columns}
+  \vspace{0.12em}
+  \textbf{逃逸攻击（dodging）：}source 被拒绝，也就是“不再认回原身份”。\qquad
+  \textbf{冒充攻击（impersonation）：}target 被接受，也就是“被认成指定目标身份”。
 
   \vspace{0.18em}
-  \textbf{关键不是把两个名称并列，而是说明“同一张样本在哪种协议下同时成功”。}
-  \vspace{0.04em}
   \centering
-  \tiny
-  \setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.03}
-  \begin{tabular}{p{2.05cm}p{6.35cm}p{2.65cm}p{2.1cm}}
+  \scriptsize
+  \setlength{\tabcolsep}{3.5pt}\renewcommand{\arraystretch}{1.0}
+  \begin{tabular}{p{2.9cm}p{3.15cm}p{4.25cm}p{2.75cm}}
     \toprule
-    层次 / 场景 & 判定方式 & 对应工作 & 与本题关系 \\
+    系统判定 & 直观结果 & 攻击含义 & 与本题的关系 \\
     \midrule
-    方法级统一\newline（不是复合结果） & 一个框架可分别执行 impersonation 或 dodging；推理时按任务切换 & UAM + ATD\newline（FG 2025） & 避免把 unified 误写成 simultaneous \\
-    同模型复合\newline（已知边界） & 同一 $f,\tau$ 下：target 接受且 source 拒绝 & Lagrangian / multi-task 联合目标 & 基础问题设定 \\
-    迁移黑盒复合\newline（未知边界） & 在 surrogate 生成；未见 victim 上两个判据仍同时成立 & Adv-Pruning\newline（MM 2024） & 直接竞品 \\
-    查询黑盒复合\newline（有限反馈） & 利用少量 victim score，把两个真实阈值同时校正到成功侧 & 当前语料检索未发现直接工作 & 本题保留的窄问题 \\
+    target 接受，source 拒绝 & 只认成目标身份 & 冒充与逃逸同时成功（身份替换） & Adv-Pruning 的直接任务；本题做少量查询校正 \\
+    target 接受，source 接受 & 同时认成目标和原身份 & 冒充成功、逃逸失败（双身份） & 本题要修正的状态 \\
+    target 拒绝，source 拒绝 & 两个身份都不认 & 仅逃逸成功 & 普通逃逸 \\
+    target 拒绝，source 接受 & 仍然只认成原身份 & 两项均失败 & 攻击失败 \\
     \bottomrule
   \end{tabular}
 
-  \vspace{0.1em}
-  {\scriptsize\color{sjtuRedPrimary}\textbf{本题位置：}结果级复合 + 查询黑盒；异构认证/追责双系统可作为后续扩展。}
+  \vspace{0.12em}
+  {\scriptsize\color{sjtuRedPrimary}\textbf{本题关注：}每次向真实系统提交候选并获得相似度，记为一次查询；
+  用有限查询把“双身份”校正为“只认成目标身份”。}
 
-  \vspace{0.05em}
-  {\tiny 依据：RSTAM（2022）；Zhou et al., \emph{Rethinking Impersonation and Dodging Attacks}, ACM MM 2024；Guo et al., \emph{Unifying and Conquering Adversarial Attacks}, FG 2025。}
+  {\tiny 说明：Guo et al.（FG 2025）的一体化框架在推理时二选一；同一样本的双目标攻击见 Zhou et al.（ACM MM 2024）。基本分类见 RSTAM（2022）。}
 \end{frame}
 
 % ============================================================
@@ -78,39 +70,52 @@
 \end{frame}
 
 % ============================================================
-% 3. 直接竞品与明确的新颖性结论
+% 3. 已有工作与本题切入点
 % ============================================================
-\begin{frame}{直接竞品与当前新颖性边界}
-  \footnotesize
-  \begin{columns}[T]
-    \column{.48\textwidth}
-    \begin{block}{直接竞品：Adv-Pruning（ACM MM 2024）}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 明确提出：impersonation 成功不保证 dodging 成功；两者应同时满足。
-        \item 以 Priming--Pruning--Restoration 调整像素扰动，在 surrogate 上优化，做黑盒迁移评测。
-        \item 已经覆盖“同时冒充目标、规避源身份”这个\textbf{任务级命题}。
+\begin{frame}{已有工作与本题的区别}
+  \scriptsize
+  \begin{columns}[T,onlytextwidth]
+    \column{.32\textwidth}
+    \begin{block}{已有工作：Adv-Pruning（ACM MM 2024）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}黑盒冒充后仍可能匹配原身份，形成“双身份残留”。
+        \item \textbf{方法：}在代理模型上重整像素扰动，迁移后维持冒充并增强逃逸。
+        \item \textbf{边界：}不查询目标模型分数，无法继续校正真实双边界。
       \end{itemize}
     \end{block}
 
-    \column{.48\textwidth}
-    \begin{block}{当前题目还能留下什么}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 不再主张“首次研究双身份联合攻击”。
-        \item 候选边界收窄为：\textbf{score-based victim feedback + 低查询边界校正 + 结构化生成空间}。
-        \item 与 Adv-Pruning 的差别必须靠同威胁模型、同预算对照证明，不能靠换成扩散模型自动成立。
+    \column{.32\textwidth}
+    \begin{block}{已有工作：BASES（NeurIPS 2022）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}纯迁移无需反馈，但定向攻击成功率通常较低。
+        \item \textbf{方法与结果：}查询目标分数并搜索代理集成权重；固定 $\ell_\infty\le16$ 时，VGG-19 定向攻击由 54\% 提高到 96\%。
+        \item \textbf{边界：}面向 ImageNet 单目标分类，不处理人脸双阈值判定。
+      \end{itemize}
+    \end{block}
+
+    \column{.32\textwidth}
+    \begin{block}{已有工作：Wei et al.（TPAMI 2023）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}补丁位置与图案相互影响，固定代理补丁未必适合目标模型。
+        \item \textbf{方法与结果：}用目标反馈调整补丁；逃逸与冒充分别以平均 11、27 次查询达到 96.65\%、72.83\%。
+        \item \textbf{边界：}两类攻击分别执行，且研究对象是局部补丁。
       \end{itemize}
     \end{block}
   \end{columns}
 
-  \vspace{0.35em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
-    \centering
-    \textbf{审计结论：partly addressed。}问题与动机已被直接竞品占位；
-    可研究的是更窄的方法/反馈边界。若低查询反馈相对 Adv-Pruning、普通多任务目标和同维黑盒优化没有增益，选题即不成立。
+  \vspace{0.12em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
+    \textbf{当前工作的位置：}Adv-Pruning 覆盖双身份任务，BASES / Wei et al. 覆盖查询校正；
+    当前工作研究二者的交叉部分：在自然人脸生成空间中，用少量目标分数校正
+    $M=\min(s_{target}-\tau,\tau-s_{source})$。只有 $M>0$，target 接受与 source 拒绝才同时成立。
+
+    \vspace{0.1em}
+    \textbf{初步现象：}E008d 中每个样本查询 18 次，5/5 的 $M$ 提高，2/5 完成身份替换；
+    但两个跨界样本的 LPIPS 均升高，仍需在相同查询、扰动和质量预算下比较。
   \end{beamercolorbox}
 
-  \vspace{0.25em}
-  {\scriptsize Zhou et al., \emph{Rethinking Impersonation and Dodging Attacks on Face Recognition Systems}, ACM MM 2024, DOI: 10.1145/3664647.3681440.}
+  \vspace{0.08em}
+  {\tiny 文献：Zhou et al.（ACM MM 2024）；Cai et al., BASES（NeurIPS 2022）；Wei et al.（TPAMI 2023）。数据：E008d，2026-11-23。}
 \end{frame}
 
 % ============================================================
@@ -282,4 +287,51 @@
     Adv-Pruning / 普通多任务目标 / 同维随机或 CMA-ES 搜索？\par
     若不能，停止该选题；若能，再据证据决定最终实现与贡献表述。
   \end{beamercolorbox}
+\end{frame}
+
+% ============================================================
+% 9. 主要参考文献
+% ============================================================
+\begin{frame}{主要参考文献}
+  \tiny
+  \begin{columns}[T,onlytextwidth]
+    \column{.49\textwidth}
+    \begin{enumerate}\setlength{\itemsep}{3pt}
+      \item Zhou F., Zhou Q., Yin B., et al.
+        \emph{Rethinking Impersonation and Dodging Attacks on Face Recognition Systems}.
+        ACM MM, 2024. DOI: 10.1145/3664647.3681440.
+
+      \item Guo J., Du Z., Deng J.
+        \emph{Unifying and Conquering Adversarial Attacks against Deep Face Recognition}.
+        IEEE FG, 2025. DOI: 10.1109/FG61629.2025.11099392.
+
+      \item Huang H., Yang Y., Wang Y.
+        \emph{AdvFaceGAN: A Face Dual-Identity Impersonation Attack Method Based on Generative Adversarial Networks}.
+        PeerJ Computer Science, 2025. DOI: 10.7717/peerj-cs.2904.
+
+      \item Wang Y., Liu Z., Luo B., et al.
+        \emph{The Invisible Polyjuice Potion: An Effective Physical Adversarial Attack Against Face Recognition}.
+        ACM CCS, 2024. DOI: 10.1145/3658644.3670382.
+    \end{enumerate}
+
+    \column{.49\textwidth}
+    \begin{enumerate}\setlength{\itemsep}{3pt}
+      \setcounter{enumi}{4}
+      \item Shan S., Wenger E., Zhang J., et al.
+        \emph{Fawkes: Protecting Privacy against Unauthorized Deep Learning Models}.
+        arXiv:2002.08327, 2020.
+
+      \item Liu X., Shen F., Zhao J., Nie C.
+        \emph{RSTAM: An Effective Black-Box Impersonation Attack on Face Recognition Using a Mobile and Compact Printer}.
+        arXiv:2206.12590, 2022.
+
+      \item Cai Z., Song C., Krishnamurthy S., et al.
+        \emph{Blackbox Attacks via Surrogate Ensemble Search}.
+        NeurIPS, 2022. DOI: 10.52202/068431-0386.
+
+      \item Wei X., Guo Y., Yu J., Zhang B.
+        \emph{Simultaneously Optimizing Perturbations and Positions for Black-Box Adversarial Patch Attacks}.
+        IEEE TPAMI, 2023. DOI: 10.1109/TPAMI.2022.3231886.
+    \end{enumerate}
+  \end{columns}
 \end{frame}
