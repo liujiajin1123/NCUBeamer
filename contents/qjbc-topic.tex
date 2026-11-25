@@ -1,385 +1,279 @@
 % !TeX encoding = UTF-8
 % !TeX root = ../qjbc-talk.tex
-% 第二项工作选题汇报：10 个内容帧（封面与结尾由入口提供）
-% 口径：组会说明"为什么做这个 / 受了什么启发 / 可行性到什么程度"
-% 不在本稿展开的内容：阈值裕量目标本身的实验臂结果（E009 的 W_SOFTMIN / W_MEAN_MARGIN
-% 三臂对照）。该结果不适合作为选题依据写入汇报，故本稿只保留由 E007 内部对比得出的定性结论。
+% 第二项工作选题汇报：8 个内容帧（封面与结尾由入口提供）
+% 口径：说明“为什么做 / 选题怎么来 / 受何启发 / 为什么理论上可行”。
+% 本稿不展开具体实现参数和小样本实验配置；方法方案尚未冻结。
 
 % ============================================================
-% 1. 场景与一句话选题
+% 1. 问题定义：旧问题与新问题先分开
 % ============================================================
-\begin{frame}{选题一句话：一个攻击，两个安全目标}
-  \textbf{攻击者设定}：已登记的低权限用户，系统里保存着他的源身份模板；
-  他要生成一张自然人脸，同时做到
-  \vspace{0.3em}
-  \begin{itemize}\setlength{\itemsep}{2pt}
-    \item \textbf{Privilege escalation（越权冒充）}：认证入口接受他为\textbf{高权限目标身份}
-    \item \textbf{Attribution evasion（归因规避）}：审计入口\textbf{不再关联回他自己的源身份}
-  \end{itemize}
-  \vspace{0.3em}
-  给定目标 FR 模型 $f_v$ 与阈值 $\tau_v$，把相似度换算成\textbf{裕量}（分数离及格线的距离，
-  正=过线、负=没过）：
-  \[
-  m_t = s_t-\tau_v \;\text{（target accept）},
-  \qquad
-  m_s = \tau_v-s_s \;\text{（source reject）}
-  \]
-  \[
-  \boxed{\,m_{\mathrm{joint}}=\min(m_t,m_s)>0
-  \;\Longleftrightarrow\;
-  \text{联合攻击成功}\,}
-  \]
-  {\small 这不是单目标 impersonation：要求两个条件\textbf{同时跨过各自的绝对阈值}，
-  而阈值由\textbf{别人的模型}决定，攻击者看不到。\textbf{选题}：用本地扩散模型生成自然候选，
-  再用\textbf{极少量}黑盒查询校正代理边界与真实边界之间的偏差。}
-\end{frame}
-
-% ============================================================
-% 2. 为什么做（一）：单目标 ASR 会把联合失败藏起来
-% ============================================================
-\begin{frame}{为什么做（一）：单目标 ASR 会把联合失败藏起来}
-  \vspace{-4pt}
-  \footnotesize
-  \begin{columns}[T]
-    \column{.49\textwidth}
-    \begin{block}{工作一（方向性铰链项）}
-      {\footnotesize
-      \textbf{现象}：FaceNet 上 ASR 77\% 时，真正身份替换仅 38\%（工作一，400 对，FAR=0.01）。
-      多数样本\textbf{同时挂着两个身份}——target 接受了，源身份没甩掉。\\[0.3em]
-      \textbf{机制}：只要求 target 比 source 高出 $m$，高出后惩罚归零，
-      \textbf{不要求 source 落到阈值以下}：\par\vspace{0.3em}
-      $\mathcal L_{1}^{(k)}=\lambda_t(1-S_{\mathrm{tgt}}^{(k)})
-      +\lambda_s[S_{\mathrm{src}}^{(k)}+m-S_{\mathrm{tgt}}^{(k)}]_+$}
-    \end{block}
-
-    \column{.49\textwidth}
-    \begin{block}{DiffAIM（差值打分）}
-      {\footnotesize
-      \textbf{同构问题}：目标函数是每代理的总分\par\vspace{0.2em}
-      $\mathrm{score}_k=S_{\mathrm{tgt}}^{(k)}-S_{\mathrm{src}}^{(k)}+1$\par\vspace{0.3em}
-      含 $-S_{\mathrm{src}}$ 压源项，但\textbf{只优化相对差值}：只要 target 比 source 高，
-      分数就好看，\textbf{两个分数的绝对位置无人管}。}
-    \end{block}
-  \end{columns}
-  \vspace{0.2em}
-
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body alerted}
-    \footnotesize\textbf{共同缺口：} 两个目标都是"排序 / 差值"结构，都不含\textbf{决策阈值}。
-    ASR 只统计 target 侧是否过线，因此"target 过、source 也过"的样本照样计入成功。
-    真正决定攻击成败的是 $\max\min(m_t,m_s)$，而不是平均分数。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 3. 为什么做（二）：同一批脸换评测模型，失败形态整体换了一种
-% ============================================================
-\begin{frame}{为什么做（二）：换一个评测模型，失败形态就换了}
-  \vspace{-6pt}
-  \footnotesize
-  DiffAIM 在同一批 \textbf{1000 对} CelebA 样本上，两个未参与训练的黑盒模型按各自阈值
-  分类（FAR=0.01：FaceNet $\tau=0.409$、AdaFace $\tau=0.145$）：
-  \vspace{0.2em}
-
-  \centering
-  \setlength{\tabcolsep}{6pt}\renewcommand{\arraystretch}{1.05}
-  \begin{tabular}{lcccc}
-    \toprule
-    黑盒模型 & 联合成功（tgt过、src未过） & 双过（身份叠加） & 仅 src 过 & 双不过 \\
-    \midrule
-    FaceNet & \textbf{612} & \textbf{37} & 44 & 307 \\
-    AdaFace & \textbf{605} & \textbf{267} & 66 & 62 \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.3em}
-  \raggedright
-  {\footnotesize
-    \textbullet\ 联合成功数几乎一样（612 vs 605）：\textbf{代理侧学到的方向是有效的}；\newline
-    \textbullet\ 但叠加数从 \textbf{37 涨到 267（约 7 倍）}，两个模型同时判叠加的只有 \textbf{26 对}；\newline
-    \textbullet\ 同一张脸，换个模型就从"恰好过线"变成"两个身份都匹配"。
-  }
-
-  \vspace{0.35em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \centering\footnotesize
-    \textbf{结论（这是选题的直接理由）：} 相对差值目标不约束分数的绝对位置，
-    所以判据一换模型，边界就漂。缺的不是"更强的扰动"，是\textbf{阈值/边界这一层}——
-    攻击必须在\textbf{真实 victim 的两个绝对阈值}上同时成立。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 4. 选题怎么来的：一条失败链，不是一次灵感
-% ============================================================
-\begin{frame}{选题怎么来的：一条失败链，不是一次灵感}
-  \vspace{-8pt}
-  \scriptsize
-  \renewcommand{\arraystretch}{1.1}
-  \setlength{\tabcolsep}{3pt}
-  \begin{tabular}{p{0.7cm}p{4.0cm}p{4.7cm}p{3.6cm}}
-    \toprule
-    编号 & 当时想做的事 & 结果 & 对下一步的约束 \\
-    \midrule
-    E004 & 联合选择代理子集与等面积支撑域提升迁移 & 区域效应存在，但代理错配与可利用结构未过 Gate B/C $\to$ stop & 仅靠“选配置”解决不了迁移 \\
-    E005 & FR 判定与真人身份感知是否有可利用错位 & 标注质量门未过，正式结论不可评价 $\to$ stop & 不再押在高成本人类测量上 \\
-    E006 & 冒充与逃逸是否共享可路由的控制支撑 & 局部连续分数有信号，端到端被直接联合优化支配，joint 成功 0 $\to$ stop & “改哪里”不是瓶颈，“优化什么”才是 \\
-    E007 & 把平均双 loss 换成\textbf{最差联合裕量} & 代理侧明显改善、留出同类模型也改善，但 FaceNet 仍 0 跨界 & 代理可行 $\neq$ 目标跨界，剩余是边界偏差 \\
-    E008 & 只开后期两个低维变量，用少量 victim 查询校正 & 跨界在小样本上出现（见可行性页） & 值得进入方法开发，但主张必须先收窄 \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.3em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body alerted}
-    \footnotesize
-    这条链的逻辑不是"某方法有效所以放大它"，而是\textbf{每走一步就排除一个解释}：
-    不是区域没选对，不是人类感知错位，不是"改哪里"不够，也不只是优化没收敛。
-    剩下的唯一解释是\textbf{代理边界与真实边界不重合}。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 5. 关键诊断：代理侧可行，目标侧不跨界
-% ============================================================
-\begin{frame}{关键诊断：代理侧已经修好，victim 仍不跨界}
-  \vspace{-8pt}
-  \scriptsize
-  \textbf{E007 设定}：15 个身份对（5 个 target 身份簇）× 3 个 LOSO fold × 3 个目标函数 = 135 个 arm，
-  每个 arm 固定 300 次 backward，\textbf{victim 查询数 0}。J=平均铰链、WM=裕量求平均、
-  W=裕量 soft-min（最差约束）。
-
-  \vspace{0.3em}
-  \centering
-  \setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.05}
-  \begin{tabular}{lccc}
-    \toprule
-    方法 & 训练侧最差联合裕量中位 & 训练侧 joint 成功 & FaceNet joint 成功 \\
-    \midrule
-    J（平均铰链） & $-0.0192$ & 19/45 & 0/45 \\
-    WM（裕量平均） & $-0.0926$ & 11/45 & 0/45 \\
-    \textbf{W（soft-min 最差裕量）} & $\mathbf{+0.0694}$ & \textbf{36/45} & \textbf{0/45} \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.35em}
-  \raggedright
-  {\footnotesize
-    \textbullet\ 训练侧 36/45 $\to$ FaceNet 0/45，这是清楚的 \textbf{train--victim gap}；\newline
-    \textbullet\ 留出同类代理（LOSO）的 joint 裕量在 \textbf{15/15 个身份对}上都比 J 改善
-    （中位差 $+0.0606$，簇 bootstrap 95\% CI $[+0.039,+0.087]$）；\newline
-    \textbullet\ 但留出侧绝对成功率只有 1/45，FaceNet joint 裕量中位仍 $-0.2406$，
-    且 W$-$J 的 FaceNet joint 裕量 CI \textbf{跨 0}；\newline
-    \textbullet\ 所以不能说"W 已经解决黑盒迁移"。\textbf{它只证明代理侧可行域可以修好、还能外推。}
-  }
-
-  \vspace{0.3em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \centering\footnotesize
-    问题定位从"优化不收敛"变成"\textbf{代理可行域与真实决策边界不重合}"——
-    这正是后续方法的入口。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 6. 剩余缺口有多大：失败样本贴着边界
-% ============================================================
-\begin{frame}{剩余缺口有多大：一半以上失败样本贴着边界}
-  \vspace{-6pt}
-  \scriptsize
-  \textbf{为什么不继续加强代理侧裕量优化}：E007 内部对比 W vs WM，soft-min 越强，修补越集中于
-  source-reject 一侧——留出侧与 FaceNet 上都有 \textbf{36/45} 个 fold 的 target 裕量反而下降。
-  继续加步数只会加剧单侧偏置，不会产生跨界。
-  \vspace{0.25em}
-
-  \textbf{DiffAIM 在 FaceNet 上的 1000 对：失败样本的联合裕量分布}
-  \vspace{0.2em}
-
-  \centering
-  \setlength{\tabcolsep}{6pt}\renewcommand{\arraystretch}{1.05}
-  \begin{tabular}{lcccc}
-    \toprule
-    联合裕量区间 & $[-0.02,0)$ & $[-0.05,0)$ & $[-0.10,0)$ & 全部失败 \\
-    \midrule
-    样本数 & \textbf{38} & \textbf{107} & \textbf{209} & 388 \\
-    占失败比例 & 9.8\% & 27.6\% & \textbf{53.9\%} & 100\% \\
-    覆盖 target 簇 & 5/5 & 5/5 & 5/5 & — \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.3em}
-  \raggedright
-  {\footnotesize
-    \textbullet\ 一半以上失败样本离边界\textbf{不到 0.10}，而且分布在全部 5 个 target 簇上，
-    不是某一类的特例；\newline
-    \textbullet\ 这些样本需要的不是"重做一遍优化"，而是\textbf{最后一小段位移}；\newline
-    \textbullet\ 但反过来说：能补的是\textbf{近边界群体}，不是任意一张脸。
-  }
-
-  \vspace{0.3em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \centering\footnotesize
-    \textbf{缺口位置清楚了}：既然只差一点，且差的方向只有 victim 自己知道，
-    那就可以用\textbf{少量真实反馈}去补，而不是继续猜。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 7. 受什么启发：四条成熟路线，缺的是接到双阈值判据上
-% ============================================================
-\begin{frame}{受了什么启发：四条成熟路线，缺的是接线}
-  \vspace{-8pt}
-  \scriptsize
-  \renewcommand{\arraystretch}{1.42}
-  \setlength{\tabcolsep}{3pt}
-  \begin{tabular}{p{2.9cm}p{3.05cm}p{4.1cm}p{2.95cm}}
-    \toprule
-    技术路线 & 代表工作 & 已证明的事 & 本工作怎么用 \\
-    \midrule
-    迁移先验+目标反馈 & TREMBA、LeBA &
-      代理搜索空间 + victim 反馈，比从零查询省 &
-      代理生成候选，反馈只修偏差\\[3pt]
-    低维结构化搜索 & AutoZOOM、DifAttack、QEBA、GADA &
-      查询空间应按任务结构降维 &
-      只动后期两个引导系数\\[3pt]
-    FR 边界搜索 & Evol.~Attack、RAF &
-      FR 边界可在低维语义参数上搜 &
-      语义参数换成轨迹参数\\[3pt]
-    少量变量在线调节 & Wei et al.-TPAMI'23 &
-      少量变量 + 好初始化就能压到十级查询 &
-      只开 $b$、$\eta$ 两个变量\\[3pt]
-    目标反馈替代代理 & PPOM-Attack &
-      直接用 victim 反馈避开代理偏差 &
-      动机成立（其预算千级）\\[3pt]
-    扩散生成的自然性 & DiffAttack、DiffAM、CLIP2Protect &
-      生成流形本身就是质量先验 &
-      冻结反演，只重放后缀 \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.3em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=2pt]{block body alerted}
-    \footnotesize
-    \textbf{诚实的定位}：这些都是成熟范式，"低维 + 查询校正"本身不是新东西。本地语料
-    没有直接做"扩散轨迹上双身份联合阈值校正"的论文，但正式新颖性审计尚未完成，
-    汇报中\textbf{不使用"首次提出"}；要回答的是\textbf{这套范式能否接到双阈值判据上}。
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 8. 方法：冻结轨迹，只动两个数
-% ============================================================
-\begin{frame}{拟议方法：冻结轨迹，只动两个数}
-  \vspace{-6pt}
-  \footnotesize
-  \textbf{设计前提（由前五页逼出）}：代理侧可修但不可靠、失败贴着边界、裕量不能当进攻目标
-  $\Rightarrow$ 跨界只能靠\textbf{目标侧反馈}完成，且反馈必须落在\textbf{少量、低维}的参数上。
-  \vspace{0.3em}
-
-  \textbf{载体：冻结反演，只重放扩散后期}
-  \begin{itemize}\setlength{\itemsep}{1pt}\footnotesize
-    \item 复用 DiffAIM 的 DDIM 反演（100 步、skip=80 $\to$ 20 个引导时间步）
-    \item 前缀 $t{=}191\!\to\!61$ 固定（240 次反向），只重放后缀 $t{=}51\!\to\!1$（60 次）
-    \item 图像自然性由生成器保证，不是靠像素约束"抠"出来
-  \end{itemize}
-  \vspace{0.2em}
-
-  \textbf{控制变量：只有两个}
-  \begin{itemize}\setlength{\itemsep}{1pt}\footnotesize
-    \item $\eta$：后期更新强度；$b$：target 侧 vs source 侧的角色权重偏置
-    \item 9 点网格 $\times$ 2 个相似度（target + source）= \textbf{每样本 18 次查询}
-    \item 每个候选只向 victim 取两个分数，直接算 $m_{\mathrm{joint}}$，不做梯度估计
-  \end{itemize}
-  \vspace{0.2em}
-
-  \textbf{选择规则预先固定，不做事后挑选}
-  \begin{itemize}\setlength{\itemsep}{1pt}\footnotesize
-    \item 用 victim 的 $m_{\mathrm{joint}}$ 选点，同时报告"若只用代理信号会选到哪个点"
-    \item 停止条件：跨界 / 用完预算 / 质量约束触发；成功与失败样本都报告
-  \end{itemize}
-\end{frame}
-
-% ============================================================
-% 9. 可行性（一）：18 次查询能推过一部分
-% ============================================================
-\begin{frame}{可行性（一）：18 次查询能推过一部分近边界样本}
-  \vspace{-8pt}
-  \scriptsize
-  冻结反演与轨迹，只重放后期时间窗，每样本 18 次查询；样本取自 E007 面板并按 FaceNet
-  联合裕量排序（\textbf{近边界群体}）。
-  \vspace{0.25em}
-
-  \centering
-  \setlength{\tabcolsep}{5pt}\renewcommand{\arraystretch}{1.02}
-  \begin{tabular}{llccc}
-    \toprule
-    组别 & 样本与网格 & 跨界 & 平均 $\Delta m_v$ & victim 选择器优于代理信号 \\
-    \midrule
-    E008 & 近边界开发集，$\eta\le1.5$ & 0/5 & $+0.0263$ & 4/5 \\
-    E008b & 同上，$\eta$ 外扩到 3.0 & 1/5 & $+0.0321$ & 3/5 \\
-    E008c & 远离边界（选样失误，不作为泛化证据） & 0/5 & $+0.0704$ & 5/5 \\
-    \textbf{E008d} & \textbf{未参与选样的近边界集} & \textbf{2/5} & $\mathbf{+0.0792}$ & \textbf{5/5} \\
-    \bottomrule
-  \end{tabular}
-
-  \vspace{0.3em}
-  \raggedright
-  {\footnotesize
-    \textbullet\ \textbf{跨界可复现}：E008b 的 1/5 在未参与选样的 E008d 上为 2/5，累计 \textbf{3/20}；\newline
-    \textbullet\ \textbf{幅度可观}：p00230/f2 从 $-0.1086$ 推到 $+0.0047$，单样本改善 $+0.1133$；\newline
-    \textbullet\ \textbf{反馈不可替代}：E008d 上 victim 选择器 5/5 优于"只用代理信号"；\newline
-    \textbullet\ \textbf{质量守住}：最优点 LPIPS 0.02–0.04，与未校正时同区间；\newline
-    \textbullet\ \textbf{诚实标注}：$\eta=3.0$ 上界被 5/5 选为最优，网格尚未收敛；
-    跨界率是\textbf{近边界群体}的小样本数字，不是总体 ASR。
-  }
-
-  \vspace{0.2em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \centering\footnotesize
-    \textbf{每样本 18 次查询，可以把一部分原本必败的近边界样本推过判定边界。}\\
-    {\scriptsize 不构成与 released DiffAIM / J 的同预算方法比较。}
-  \end{beamercolorbox}
-\end{frame}
-
-% ============================================================
-% 10. 可行性（二）：工程底座、风险与下一步
-% ============================================================
-\begin{frame}{可行性（二）：底座已就位，风险已列清}
-  \vspace{-8pt}
-  \scriptsize
+\begin{frame}{普通冒充与复合攻击的判定区别}
+  \small
   \begin{columns}[T]
     \column{.47\textwidth}
-    {\scriptsize\textbf{已具备的工程基础}
-    \begin{itemize}\setlength{\itemsep}{0pt}
-      \item 扩散反演、生成、代理集成、质量度量已跑通
-      \item J / WM / W 三种目标与 LOSO runner 已实现
-      \item manifest、resume、聚合、trace 已完成（135 arm 验证过）
-      \item 单 arm 约 49 秒；查询账本可逐条审计
-      \item 在线阶段只更新 2 个标量，不重训生成器
-    \end{itemize}}
+    \begin{block}{普通 impersonation 攻击}
+      只回答一个问题：生成脸能否被目标系统接受为指定身份？
+      \[
+        s_t \ge \tau_v
+      \]
+      因此，单目标 ASR 和只优化 target similarity 的损失函数，
+      对它自己的任务是合理的；不能因为它没有 source 阈值就说设计有误。
+    \end{block}
 
-    \column{.51\textwidth}
-    {\scriptsize\textbf{主要风险与控制}
-    \begin{itemize}\setlength{\itemsep}{0pt}
-      \item 审计侧可能是硬标签 $\to$ 明确 score-based 假设，decision-only 列为扩展
-      \item 低维空间表达不足 $\to$ 与更宽时间窗 / 随机同维子空间做 oracle 诊断
-      \item 通用黑盒优化即可达成 $\to$ 同维度同预算 SPSA/NES/CMA-ES 正面对比
-      \item 起点无必要（代理已饱和）$\to$ 三种初始化进同一校正器
-      \item victim 过拟合 / 画质换跨界 $\to$ 调参与测试 victim 分离，固定 LPIPS 预算
-    \end{itemize}}
+    \column{.49\textwidth}
+    \begin{alertblock}{本文关心的复合攻击场景}
+      已登记的低权限用户既要冒充高权限目标，又不希望审计系统把生成脸关联回自己：
+      \[
+        \underbrace{s_t \ge \tau_v}_{\text{目标身份被接受}},\qquad
+        \underbrace{s_s < \tau_v}_{\text{源身份被拒绝}}.
+      \]
+      这是一个攻击场景中的\textbf{两个安全条件}，评价问题比普通 impersonation 更严格。
+    \end{alertblock}
   \end{columns}
 
-  \vspace{0.2em}
-  {\scriptsize\textbf{下一步（按顺序）}
-  \begin{itemize}\setlength{\itemsep}{0pt}
-    \item \textbf{查询数扫描}：读现有查询账本，画 $k{=}3/6/9/12/18$ 累计跨界曲线（不占算力）
-    \item \textbf{外扩网格}：$\eta$ 到 4.0–4.5；$b$ 朝\textbf{正}方向扩（此前只朝负扩）
-    \item \textbf{扩样本}：5 例扩到 15 例，覆盖全部 5 个 target 簇；\textbf{正面对照}：同 18 次预算下 DiffAIM 起点 vs W 起点
-  \end{itemize}}
+  \vspace{0.4em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
+    \centering
+    联合成功判据：$m_{\mathrm{joint}}=\min(s_t-\tau_v,\,\tau_v-s_s)>0$。\quad
+    \textbf{阈值首先属于评测与威胁模型，不要求所有旧方法都把阈值写进训练损失。}
+  \end{beamercolorbox}
+\end{frame}
 
-  \vspace{0.15em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=2pt]{block body example}
-    \centering\footnotesize
-    中心问题：\textbf{相同查询与质量预算下，少量 victim 反馈能否把“代理已改善、FaceNet 未跨界”
-    的样本推过真实联合边界？}\par\vspace{0.15em}
-    {\scriptsize 判定只看两项：是否产生新的 victim joint success；每次成功花了多少查询。}
+% ============================================================
+% 2. 为什么做：单目标成功不能回答复合风险
+% ============================================================
+\begin{frame}{为什么做：单目标成功不能回答“是否还会被认回去”}
+  \small
+  \textbf{已有认识：}人脸验证不是互斥分类。同一张脸可能同时超过多个身份模板的阈值，
+  所以“被目标接受”并不逻辑蕴含“已摆脱源身份”。
+
+  \vspace{0.4em}
+  \centering
+  \setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.1}
+  \begin{tabular}{lccc}
+    \toprule
+    黑盒模型（同一批 1000 对） & target 通过 & 其中 source 也通过 & 占 target 通过比例 \\
+    \midrule
+    FaceNet & 649 & 37 & 5.7\% \\
+    AdaFace & 872 & 267 & 30.6\% \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.5em}
+  \raggedright
+  \begin{itemize}\setlength{\itemsep}{3pt}
+    \item 单目标 ASR 仍然回答了“能否冒充”；但它不会报告 source 是否仍被接受。
+    \item 同一批候选换一个 victim，双身份通过比例从 5.7\% 变为 30.6\%，说明失败形态由真实决策边界决定。
+    \item 因而值得研究的不是“再造一个双 loss”，而是：\textbf{如何让两个条件在未知 victim 的真实阈值上同时成立。}
+  \end{itemize}
+
+  \vspace{0.2em}
+  {\scriptsize 数据来源：本地 DiffAIM 复评，CelebA 1000 对，FAR=0.01；数字只用于说明判据差异，不作为方法有效性结论。}
+\end{frame}
+
+% ============================================================
+% 3. 直接竞品与明确的新颖性结论
+% ============================================================
+\begin{frame}{直接竞品与当前新颖性边界}
+  \footnotesize
+  \begin{columns}[T]
+    \column{.48\textwidth}
+    \begin{block}{直接竞品：Adv-Pruning（ACM MM 2024）}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 明确提出：impersonation 成功不保证 dodging 成功；两者应同时满足。
+        \item 以 Priming--Pruning--Restoration 调整像素扰动，在 surrogate 上优化，做黑盒迁移评测。
+        \item 已经覆盖“同时冒充目标、规避源身份”这个\textbf{任务级命题}。
+      \end{itemize}
+    \end{block}
+
+    \column{.48\textwidth}
+    \begin{block}{当前题目还能留下什么}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 不再主张“首次研究双身份联合攻击”。
+        \item 候选边界收窄为：\textbf{score-based victim feedback + 低查询边界校正 + 结构化生成空间}。
+        \item 与 Adv-Pruning 的差别必须靠同威胁模型、同预算对照证明，不能靠换成扩散模型自动成立。
+      \end{itemize}
+    \end{block}
+  \end{columns}
+
+  \vspace{0.35em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
+    \centering
+    \textbf{审计结论：partly addressed。}问题与动机已被直接竞品占位；
+    可研究的是更窄的方法/反馈边界。若低查询反馈相对 Adv-Pruning、普通多任务目标和同维黑盒优化没有增益，选题即不成立。
+  \end{beamercolorbox}
+
+  \vspace{0.25em}
+  {\scriptsize Zhou et al., \emph{Rethinking Impersonation and Dodging Attacks on Face Recognition Systems}, ACM MM 2024, DOI: 10.1145/3664647.3681440.}
+\end{frame}
+
+% ============================================================
+% 4. 选题怎么来：文献工作流
+% ============================================================
+\begin{frame}{选题怎么来：先建立可重复的“检索—排除”工作流}
+  \centering
+  \begin{tikzpicture}[
+    node distance=0pt,
+    box/.style={draw=blue!55,rounded corners,fill=blue!5,minimum height=1.15cm,
+      text width=1.95cm,align=center,font=\scriptsize},
+    arr/.style={-{Latex[length=2.2mm]},thick,blue!65}
+  ]
+    \node[box] (api) at (-5.35,0) {定时调用公开学术 API\\arXiv / S2 / OpenAlex / DBLP};
+    \node[box] (triage) at (-3.2,0) {去重与候选清单\\人工确认后入库};
+    \node[box] (repo) at (-1.05,0) {文献仓库\\PDF→Markdown\\证据定位};
+    \node[box] (dify) at (1.1,0) {切片并同步 Dify\\建立检索索引};
+    \node[box] (search) at (3.25,0) {自然语言检索\\找竞品、反例\\与相邻范式};
+    \node[box] (verify) at (5.4,0) {回读原文 + 外部检索\\给出证据判定};
+    \draw[arr] (api) -- (triage);
+    \draw[arr] (triage) -- (repo);
+    \draw[arr] (repo) -- (dify);
+    \draw[arr] (dify) -- (search);
+    \draw[arr] (search) -- (verify);
+  \end{tikzpicture}
+
+  \vspace{0.8em}
+  \begin{beamercolorbox}[wd=.94\textwidth,sep=5pt]{block body example}
+    \small
+    \textbf{核心用途是快速排除：}流程把漫无目的的搜论文变成可重复操作。
+    先定位最危险的直接竞品，再读原文判断概念是否已经被占据，最后才保留一个足够窄的研究问题。
+  \end{beamercolorbox}
+
+  \vspace{0.35em}
+  {\scriptsize 语义检索可能漏召回，因此保留全文检索和外部学术 API 复核；任何一次零命中都不能证明“没有相关工作”。}
+\end{frame}
+
+% ============================================================
+% 5. 工作流能做什么、不能做什么
+% ============================================================
+\begin{frame}{这套工作流能做什么，不适合做什么}
+  \footnotesize
+  \begin{columns}[T]
+    \column{.48\textwidth}
+    \begin{exampleblock}{适合：提高“排除错误选题”的速度}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 持续补齐最新论文，减少只凭记忆选题；
+        \item 用语义检索快速找到同义表述和直接竞品；
+        \item 把命中定位回论文原文，保留可复核证据；
+        \item 用反向查询主动寻找“别人已经做过”的证据；
+        \item 记录候选为何被否决、收窄或保留。
+      \end{itemize}
+    \end{exampleblock}
+
+    \column{.48\textwidth}
+    \begin{alertblock}{不适合：把自动生成结果直接当选题}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 检索零命中不等于研究空白；
+        \item Dify 分数和大模型判断不能代替原文；
+        \item 拼接两个热门模块通常只是已有范式换场景；
+        \item 自动流程不能判断真实需求、实验可得性和贡献强度；
+        \item 最终仍要做外部检索、危险 baseline 与证伪条件。
+      \end{itemize}
+    \end{alertblock}
+  \end{columns}
+
+  \vspace{0.35em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
+    \centering
+    本次实际作用：最初的“双目标攻击”被 Adv-Pruning 直接否掉；
+    候选被收窄为“\textbf{少量真实反馈能否修正双阈值上的 surrogate--victim 偏差}”。
+  \end{beamercolorbox}
+\end{frame}
+
+% ============================================================
+% 6. 受何启发：成熟机制形成一条可行性链
+% ============================================================
+\begin{frame}{形成研究命题的四条证据线}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.25}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{p{2.35cm}p{3.15cm}p{5.1cm}p{2.4cm}}
+    \toprule
+    证据线 & 代表工作 & 已经证明的机制 & 对当前题目的含义 \\
+    \midrule
+    双边界问题真实存在 & Adv-Pruning（ACM MM'24） &
+      impersonation 不保证 dodging；surrogate 与 victim 边界错位会留下多身份样本 &
+      问题成立，但任务不新 \\[2pt]
+    代理先验 + 少量反馈 & BASES（NeurIPS'22）、LeBA（NeurIPS'20） &
+      先用 surrogate 给出高质量搜索起点，再用 victim 反馈修偏，可显著减少查询 &
+      反馈应只修“最后一段” \\[2pt]
+    低维结构化搜索 & Evolutionary Attack（CVPR'19）、DifAttack（AAAI'24） &
+      全像素黑盒搜索低效；在低维、任务相关空间中搜索可提高查询效率 &
+      搜索空间必须有结构依据 \\[2pt]
+    生成空间提供先验 & DiffAIM 等扩散人脸攻击 &
+      生成模型可提供自然人脸载体和可控身份变化 &
+      自然性载体，不等于贡献本身 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.35em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
+    \footnotesize
+    \textbf{这些证据共同支持一个待验证命题：}
+    surrogate/生成模型先把候选带到联合边界附近，再在低维控制空间中用少量 victim score 寻找真实跨界点。
+    “低维 + 反馈”已有充分先例，真正要验证的是它能否服务于\textbf{双阈值联合判据}。
+  \end{beamercolorbox}
+\end{frame}
+
+% ============================================================
+% 7. 理论可行性：把问题写成可观测的低维黑盒优化
+% ============================================================
+\begin{frame}{低维黑盒优化的可行性条件}
+  \footnotesize
+  令 $G(\theta)$ 表示生成器在少量结构化控制变量 $\theta$ 下产生的候选脸，
+  victim 返回与目标模板、源模板的两个相似度。则可直接构造
+  \[
+    J_v(\theta)=\min\big[
+      s_v(G(\theta),x_t)-\tau_v,\;
+      \tau_v-s_v(G(\theta),x_s)
+    \big].
+  \]
+
+  \begin{enumerate}\setlength{\itemsep}{2pt}
+    \item \textbf{目标是可观测的：}score-based 查询给出 $J_v(\theta)$，不需要 victim 参数或梯度；问题是标准的零阶黑盒优化。
+    \item \textbf{查询量有机会受控：}若 $\theta$ 只描述少量任务相关控制量，而不是全部像素/latent，搜索维度大幅下降。BASES、Evolutionary Attack、DifAttack 已分别验证这一原则。
+    \item \textbf{起点不是随机的：}surrogate 与生成模型提供接近可行域且较自然的候选，victim 查询只负责修正模型间偏差。
+  \end{enumerate}
+
+  \vspace{0.25em}
+  \begin{alertblock}{可行性成立的前提}
+    victim 返回连续 score；攻击者能分别比较 target/source 模板；阈值或等价规则可获得；
+    选定控制空间中存在联合可行点。缺少任一条件时，需要收窄威胁模型或改成 decision-only 问题。
+  \end{alertblock}
+\end{frame}
+
+% ============================================================
+% 8. 当前结论与主张边界
+% ============================================================
+\begin{frame}{当前结论与主张边界}
+  \footnotesize
+  \begin{columns}[T]
+    \column{.48\textwidth}
+    \begin{exampleblock}{现在可以清楚地说}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 复合场景要求 target accept 与 source reject 同时成立；
+        \item 单目标 ASR 无法完整度量这一风险，但不是旧方法的逻辑错误；
+        \item 直接竞品已证明问题存在，也占据了任务级新颖性；
+        \item 少量 victim feedback + 低维结构化搜索在理论上有成熟先例。
+      \end{itemize}
+    \end{exampleblock}
+
+    \column{.48\textwidth}
+    \begin{alertblock}{现在不能说}
+      \begin{itemize}\setlength{\itemsep}{2pt}
+        \item 不能声称首次提出 simultaneous impersonation/dodging；
+        \item 不能把“只调两个数”当成已经确定的方法；
+        \item 不能用小样本跨界结果替代与直接竞品的同预算比较；
+        \item 不能把“理论可优化”写成“方法已经有效”。
+      \end{itemize}
+    \end{alertblock}
+  \end{columns}
+
+  \vspace{0.35em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
+    \centering
+    \textbf{下一步只回答一个可证伪问题：}
+    在相同查询与质量预算下，victim-side 低维校正能否稳定优于
+    Adv-Pruning / 普通多任务目标 / 同维随机或 CMA-ES 搜索？\par
+    若不能，停止该选题；若能，再据证据决定最终实现与贡献表述。
   \end{beamercolorbox}
 \end{frame}
