@@ -5,38 +5,36 @@
 % 本稿不展开具体实现参数和小样本实验配置；方法方案尚未冻结。
 
 % ============================================================
-% 1. 问题定义：旧问题与新问题先分开
+% 1. 基本攻击类型与复合场景
 % ============================================================
-\begin{frame}{普通冒充与复合攻击的判定区别}
-  \small
-  \begin{columns}[T]
-    \column{.47\textwidth}
-    \begin{block}{普通 impersonation 攻击}
-      只回答一个问题：生成脸能否被目标系统接受为指定身份？
-      \[
-        s_t \ge \tau_v
-      \]
-      因此，单目标 ASR 和只优化 target similarity 的损失函数，
-      对它自己的任务是合理的；不能因为它没有 source 阈值就说设计有误。
-    \end{block}
+\begin{frame}{冒充与逃逸组合形式}
+  \scriptsize
+  \textbf{符号说明：}\textbf{source} 指原身份，\textbf{target} 指希望冒充的身份；\textbf{$\tau$} 是接受阈值。相似度 $s\ge\tau$ 表示系统接受，否则拒绝。
 
-    \column{.49\textwidth}
-    \begin{alertblock}{本文关心的复合攻击场景}
-      已登记的低权限用户既要冒充高权限目标，又不希望审计系统把生成脸关联回自己：
-      \[
-        \underbrace{s_t \ge \tau_v}_{\text{目标身份被接受}},\qquad
-        \underbrace{s_s < \tau_v}_{\text{源身份被拒绝}}.
-      \]
-      这是一个攻击场景中的\textbf{两个安全条件}，评价问题比普通 impersonation 更严格。
-    \end{alertblock}
-  \end{columns}
+  \textbf{联合裕量：} $M=\min\big(s_{target}-\tau,\;\tau-s_{source}\big)$，取“目标身份超过阈值的程度”与“原身份低于阈值的程度”中较差的一项；只有 $M>0$，冒充与逃逸才同时成功。
 
-  \vspace{0.4em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
-    \centering
-    联合成功判据：$m_{\mathrm{joint}}=\min(s_t-\tau_v,\,\tau_v-s_s)>0$。\quad
-    \textbf{阈值首先属于评测与威胁模型，不要求所有旧方法都把阈值写进训练损失。}
-  \end{beamercolorbox}
+  \textbf{逃逸攻击（dodging）：}source 被拒绝，即“不再认回原身份”。\quad
+  \textbf{冒充攻击（impersonation）：}target 被接受，即“被认成指定目标身份”。
+
+  \vspace{0.1em}
+  \centering
+  \tiny
+  \setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.0}
+  \begin{tabular}{p{2.0cm}p{1.8cm}p{2.6cm}p{2.1cm}p{4.0cm}}
+    \toprule
+    系统判定 & 直观结果 & 攻击含义 & 与当前工作的关系 & 代表工作 / 已有覆盖 \\
+    \midrule
+    target 接受，source 拒绝 & 只认成目标身份 & 冒充与逃逸同时成功（身份替换） & Adv-Pruning 直接任务；当前工作做查询校正 & 联合目标 Adv-Pruning\textsuperscript{[1]}（分报 ASR，无联合指标） \\
+    target 接受，source 接受 & 同时认成目标和原身份 & 冒充成功、逃逸失败（双身份） & 当前工作要修正的状态 & 双身份构造与度量\textsuperscript{[3]}；残留观察\textsuperscript{[1]} \\
+    target 拒绝，source 拒绝 & 两个身份都不认 & 仅逃逸成功 & 普通逃逸 & 物理身份规避\textsuperscript{[4]}；隐私 cloaking\textsuperscript{[5]} \\
+    target 拒绝，source 接受 & 仍然只认成原身份 & 两项均失败 & 攻击失败 & 无专门方法（失败基线） \\
+    方法类别（非判定格） & 单框架交替学两类任务 & 统一建模两类任务；推理按任务切换 & 不同路线，背景对照 & 统一框架\textsuperscript{[2]} \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.08em}
+  {\scriptsize\color{sjtuRedPrimary}\textbf{当前工作关注：}每次向真实系统提交候选并获得相似度，记为一次查询；
+  用有限查询把“双身份”校正为“只认成目标身份”。}
 \end{frame}
 
 % ============================================================
@@ -63,8 +61,8 @@
   \raggedright
   \begin{itemize}\setlength{\itemsep}{3pt}
     \item 单目标 ASR 仍然回答了“能否冒充”；但它不会报告 source 是否仍被接受。
-    \item 同一批候选换一个 victim，双身份通过比例从 5.7\% 变为 30.6\%，说明失败形态由真实决策边界决定。
-    \item 因而值得研究的不是“再造一个双 loss”，而是：\textbf{如何让两个条件在未知 victim 的真实阈值上同时成立。}
+    \item 同一批候选换一个黑盒模型，双身份通过比例从 5.7\% 变为 30.6\%，说明失败形态由真实决策边界决定。
+    \item 因而值得研究的不是“再造一个双 loss”，而是：\textbf{如何让两个条件在未知黑盒模型的真实阈值上同时成立。}
   \end{itemize}
 
   \vspace{0.2em}
@@ -74,37 +72,48 @@
 % ============================================================
 % 3. 直接竞品与明确的新颖性结论
 % ============================================================
-\begin{frame}{直接竞品与当前新颖性边界}
-  \footnotesize
-  \begin{columns}[T]
-    \column{.48\textwidth}
-    \begin{block}{直接竞品：Adv-Pruning（ACM MM 2024）}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 明确提出：impersonation 成功不保证 dodging 成功；两者应同时满足。
-        \item 以 Priming--Pruning--Restoration 调整像素扰动，在 surrogate 上优化，做黑盒迁移评测。
-        \item 已经覆盖“同时冒充目标、规避源身份”这个\textbf{任务级命题}。
+\begin{frame}{已有工作与当前工作的区别}
+  \scriptsize
+  \vspace{-1.5em}
+  \begin{columns}[T,onlytextwidth]
+    \column{.3\textwidth}
+    \begin{block}{Adv-Pruning（ACM MM 2024）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}黑盒冒充后仍可能匹配原身份，形成“双身份残留”。
+        \item \textbf{方法：}在代理模型上重整像素扰动，迁移后维持冒充并增强逃逸。
+        \item \textbf{边界：}不查询目标模型分数，无法继续校正真实双边界。
       \end{itemize}
     \end{block}
 
-    \column{.48\textwidth}
-    \begin{block}{当前题目还能留下什么}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 不再主张“首次研究双身份联合攻击”。
-        \item 候选边界收窄为：\textbf{score-based victim feedback + 低查询边界校正 + 结构化生成空间}。
-        \item 与 Adv-Pruning 的差别必须靠同威胁模型、同预算对照证明，不能靠换成扩散模型自动成立。
+    \column{.3\textwidth}
+    \begin{block}{BASES（NeurIPS 2022）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}纯迁移无需反馈，但定向攻击成功率通常较低。
+        \item \textbf{方法与结果：}查询目标分数并搜索代理集成权重；固定 $\ell_\infty\le16$ 时，VGG-19 定向攻击由 54\% 提高到 96\%。
+        \item \textbf{边界：}面向 ImageNet 单目标分类，不处理人脸双阈值判定。
+      \end{itemize}
+    \end{block}
+
+    \column{.3\textwidth}
+    \begin{block}{Wei et al.（TPAMI 2023）}
+      \begin{itemize}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}
+        \item \textbf{现象：}补丁位置与图案相互影响，固定代理补丁未必适合目标模型。
+        \item \textbf{方法与结果：}用目标反馈调整补丁；逃逸与冒充分别以平均 11、27 次查询达到 96.65\%、72.83\%。
+        \item \textbf{边界：}两类攻击分别执行，且研究对象是局部补丁。
       \end{itemize}
     \end{block}
   \end{columns}
 
-  \vspace{0.35em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
-    \centering
-    \textbf{审计结论：partly addressed。}问题与动机已被直接竞品占位；
-    可研究的是更窄的方法/反馈边界。若低查询反馈相对 Adv-Pruning、普通多任务目标和同维黑盒优化没有增益，选题即不成立。
-  \end{beamercolorbox}
+  \vspace{0.12em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
+    \textbf{当前工作的位置：}Adv-Pruning 覆盖双身份任务，BASES / Wei et al. 覆盖查询校正；
+    当前工作研究二者的交叉部分：在自然人脸生成空间中，用少量目标分数校正
+    $M=\min(s_{target}-\tau,\tau-s_{source})$。只有 $M>0$，target 接受与 source 拒绝才同时成立。
 
-  \vspace{0.25em}
-  {\scriptsize Zhou et al., \emph{Rethinking Impersonation and Dodging Attacks on Face Recognition Systems}, ACM MM 2024, DOI: 10.1145/3664647.3681440.}
+    \vspace{0.2em}
+    \textbf{初步现象：}对处于边界的样本进行黑盒查询 18 次，5/5 的 $M$ 提高，2/5 完成身份替换；
+    但两个跨界样本的 LPIPS 均升高，仍需在相同查询、扰动和质量预算下比较。
+  \end{beamercolorbox}
 \end{frame}
 
 % ============================================================
@@ -114,21 +123,22 @@
   \centering
   \begin{tikzpicture}[
     node distance=0pt,
-    box/.style={draw=blue!55,rounded corners,fill=blue!5,minimum height=1.15cm,
-      text width=1.95cm,align=center,font=\scriptsize},
-    arr/.style={-{Latex[length=2.2mm]},thick,blue!65}
+    box/.style={draw=blue!55,rounded corners,fill=blue!5,minimum height=1.25cm,
+      text width=2.8cm,align=center,font=\scriptsize},
+    arr/.style={-{Latex[length=3mm,width=2.4mm]},line width=1.1pt,blue!80!black,
+      shorten >=2.5pt,shorten <=2.5pt}
   ]
-    \node[box] (api) at (-5.35,0) {定时调用公开学术 API\\arXiv / S2 / OpenAlex / DBLP};
-    \node[box] (triage) at (-3.2,0) {去重与候选清单\\人工确认后入库};
-    \node[box] (repo) at (-1.05,0) {文献仓库\\PDF→Markdown\\证据定位};
-    \node[box] (dify) at (1.1,0) {切片并同步 Dify\\建立检索索引};
-    \node[box] (search) at (3.25,0) {自然语言检索\\找竞品、反例\\与相邻范式};
-    \node[box] (verify) at (5.4,0) {回读原文 + 外部检索\\给出证据判定};
-    \draw[arr] (api) -- (triage);
-    \draw[arr] (triage) -- (repo);
-    \draw[arr] (repo) -- (dify);
-    \draw[arr] (dify) -- (search);
-    \draw[arr] (search) -- (verify);
+    \node[box] (api)    at (-3.5,1.0) {定时调用 ai4scholar\\API 接口};
+    \node[box] (triage) at (0,1.0)    {去重与候选清单\\人工确认入库};
+    \node[box] (repo)   at (3.5,1.0)  {文献仓库\\PDF→Markdown 定位};
+    \node[box] (dify)   at (3.5,-1.0) {切片同步 Dify 知识库\\建立检索索引};
+    \node[box] (search) at (0,-1.0)    {自然语言检索\\竞品·反例·邻范式};
+    \node[box] (verify) at (-3.5,-1.0){回读原文 + 外部检索\\证据判定};
+    \draw[arr] (api.east)    -- (triage.west);
+    \draw[arr] (triage.east) -- (repo.west);
+    \draw[arr] (repo.south)   -- (dify.north);
+    \draw[arr] (dify.west)    -- (search.east);
+    \draw[arr] (search.west) -- (verify.east);
   \end{tikzpicture}
 
   \vspace{0.8em}
@@ -147,6 +157,7 @@
 % ============================================================
 \begin{frame}{这套工作流能做什么，不适合做什么}
   \footnotesize
+  \vspace{-2em}
   \begin{columns}[T]
     \column{.48\textwidth}
     \begin{exampleblock}{适合：提高“排除错误选题”的速度}
@@ -170,13 +181,6 @@
       \end{itemize}
     \end{alertblock}
   \end{columns}
-
-  \vspace{0.35em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
-    \centering
-    本次实际作用：最初的“双目标攻击”被 Adv-Pruning 直接否掉；
-    候选被收窄为“\textbf{少量真实反馈能否修正双阈值上的 surrogate--victim 偏差}”。
-  \end{beamercolorbox}
 \end{frame}
 
 % ============================================================
@@ -188,7 +192,7 @@
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{p{2.35cm}p{3.15cm}p{5.1cm}p{2.4cm}}
     \toprule
-    证据线 & 代表工作 & 已经证明的机制 & 对当前题目的含义 \\
+    证据线 & 代表工作 & 已经证明的机制 & 对当前工作的含义 \\
     \midrule
     双边界问题真实存在 & Adv-Pruning（ACM MM'24） &
       impersonation 不保证 dodging；surrogate 与 victim 边界错位会留下多身份样本 &
@@ -209,9 +213,10 @@
   \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
     \footnotesize
     \textbf{这些证据共同支持一个待验证命题：}
-    surrogate/生成模型先把候选带到联合边界附近，再在低维控制空间中用少量 victim score 寻找真实跨界点。
+    本地代理模型/生成模型先把候选带到联合边界附近，再在低维控制空间中用少量 victim score 寻找真实跨界点。
     “低维 + 反馈”已有充分先例，真正要验证的是它能否服务于\textbf{双阈值联合判据}。
   \end{beamercolorbox}
+  {\tiny 术语：victim＝被攻击的真实识别系统；victim score＝victim 返回的连续相似度分数。}
 \end{frame}
 
 % ============================================================
@@ -219,6 +224,7 @@
 % ============================================================
 \begin{frame}{低维黑盒优化的可行性条件}
   \footnotesize
+  \vspace{-2em}
   令 $G(\theta)$ 表示生成器在少量结构化控制变量 $\theta$ 下产生的候选脸，
   victim 返回与目标模板、源模板的两个相似度。则可直接构造
   \[
@@ -229,51 +235,57 @@
   \]
 
   \begin{enumerate}\setlength{\itemsep}{2pt}
-    \item \textbf{目标是可观测的：}score-based 查询给出 $J_v(\theta)$，不需要 victim 参数或梯度；问题是标准的零阶黑盒优化。
+    \item \textbf{目标是可观测的：}score-based （可拿到连续相似度分数，而非仅返回通过/拒绝）查询给出 $J_v(\theta)$，不需要 victim 参数或梯度；问题是标准的零阶黑盒优化。
     \item \textbf{查询量有机会受控：}若 $\theta$ 只描述少量任务相关控制量，而不是全部像素/latent，搜索维度大幅下降。BASES、Evolutionary Attack、DifAttack 已分别验证这一原则。
     \item \textbf{起点不是随机的：}surrogate 与生成模型提供接近可行域且较自然的候选，victim 查询只负责修正模型间偏差。
   \end{enumerate}
 
-  \vspace{0.25em}
-  \begin{alertblock}{可行性成立的前提}
-    victim 返回连续 score；攻击者能分别比较 target/source 模板；阈值或等价规则可获得；
-    选定控制空间中存在联合可行点。缺少任一条件时，需要收窄威胁模型或改成 decision-only 问题。
-  \end{alertblock}
 \end{frame}
 
 % ============================================================
-% 8. 当前结论与主张边界
+% 9. 参考文献
 % ============================================================
-\begin{frame}{当前结论与主张边界}
-  \footnotesize
-  \begin{columns}[T]
-    \column{.48\textwidth}
-    \begin{exampleblock}{现在可以清楚地说}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 复合场景要求 target accept 与 source reject 同时成立；
-        \item 单目标 ASR 无法完整度量这一风险，但不是旧方法的逻辑错误；
-        \item 直接竞品已证明问题存在，也占据了任务级新颖性；
-        \item 少量 victim feedback + 低维结构化搜索在理论上有成熟先例。
-      \end{itemize}
-    \end{exampleblock}
+\begin{frame}{主要参考文献}
+  \vspace{-2em}
+  \tiny
+  \begin{columns}[T,onlytextwidth]
+    \column{.49\textwidth}
+    \begin{enumerate}\setlength{\itemsep}{3pt}
+      \item Zhou F., Zhou Q., Yin B., et al.
+        \emph{Rethinking Impersonation and Dodging Attacks on Face Recognition Systems}.
+        ACM MM, 2024. DOI: 10.1145/3664647.3681440.
 
-    \column{.48\textwidth}
-    \begin{alertblock}{现在不能说}
-      \begin{itemize}\setlength{\itemsep}{2pt}
-        \item 不能声称首次提出 simultaneous impersonation/dodging；
-        \item 不能把“只调两个数”当成已经确定的方法；
-        \item 不能用小样本跨界结果替代与直接竞品的同预算比较；
-        \item 不能把“理论可优化”写成“方法已经有效”。
-      \end{itemize}
-    \end{alertblock}
+      \item Guo J., Du Z., Deng J.
+        \emph{Unifying and Conquering Adversarial Attacks against Deep Face Recognition}.
+        IEEE FG, 2025. DOI: 10.1109/FG61629.2025.11099392.
+
+      \item Huang H., Yang Y., Wang Y.
+        \emph{AdvFaceGAN: A Face Dual-Identity Impersonation Attack Method Based on Generative Adversarial Networks}.
+        PeerJ Computer Science, 2025. DOI: 10.7717/peerj-cs.2904.
+
+      \item Wang Y., Liu Z., Luo B., et al.
+        \emph{The Invisible Polyjuice Potion: An Effective Physical Adversarial Attack Against Face Recognition}.
+        ACM CCS, 2024. DOI: 10.1145/3658644.3670382.
+    \end{enumerate}
+
+    \column{.49\textwidth}
+    \begin{enumerate}\setlength{\itemsep}{3pt}
+      \setcounter{enumi}{4}
+      \item Shan S., Wenger E., Zhang J., et al.
+        \emph{Fawkes: Protecting Privacy against Unauthorized Deep Learning Models}.
+        arXiv:2002.08327, 2020.
+
+      \item Liu X., Shen F., Zhao J., Nie C.
+        \emph{RSTAM: An Effective Black-Box Impersonation Attack on Face Recognition Using a Mobile and Compact Printer}.
+        arXiv:2206.12590, 2022.
+
+      \item Cai Z., Song C., Krishnamurthy S., et al.
+        \emph{Blackbox Attacks via Surrogate Ensemble Search}.
+        NeurIPS, 2022. DOI: 10.52202/068431-0386.
+
+      \item Wei X., Guo Y., Yu J., Zhang B.
+        \emph{Simultaneously Optimizing Perturbations and Positions for Black-Box Adversarial Patch Attacks}.
+        IEEE TPAMI, 2023. DOI: 10.1109/TPAMI.2022.3231886.
+    \end{enumerate}
   \end{columns}
-
-  \vspace{0.35em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body alerted}
-    \centering
-    \textbf{下一步只回答一个可证伪问题：}
-    在相同查询与质量预算下，victim-side 低维校正能否稳定优于
-    Adv-Pruning / 普通多任务目标 / 同维随机或 CMA-ES 搜索？\par
-    若不能，停止该选题；若能，再据证据决定最终实现与贡献表述。
-  \end{beamercolorbox}
 \end{frame}
