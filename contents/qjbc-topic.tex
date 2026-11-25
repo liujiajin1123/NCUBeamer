@@ -5,38 +5,50 @@
 % 本稿不展开具体实现参数和小样本实验配置；方法方案尚未冻结。
 
 % ============================================================
-% 1. 问题定义：旧问题与新问题先分开
+% 1. 基本攻击类型与复合场景
 % ============================================================
-\begin{frame}{普通冒充与复合攻击的判定区别}
-  \small
+\begin{frame}{人脸对抗攻击的基本类型与复合场景}
+  \footnotesize
+  现有综述通常按攻击目标将人脸识别对抗攻击分为两类：
+  \vspace{0.2em}
   \begin{columns}[T]
-    \column{.47\textwidth}
-    \begin{block}{普通 impersonation 攻击}
-      只回答一个问题：生成脸能否被目标系统接受为指定身份？
-      \[
-        s_t \ge \tau_v
-      \]
-      因此，单目标 ASR 和只优化 target similarity 的损失函数，
-      对它自己的任务是合理的；不能因为它没有 source 阈值就说设计有误。
-    \end{block}
+    \column{.48\textwidth}
+    \textbf{Dodging attack（逃逸攻击）}\
+    让系统无法把对抗脸识别为真实身份：
+    $s(x_{adv},x_s)<\tau_v$。常用于规避识别、监控或身份追踪，属于 untargeted attack。
 
-    \column{.49\textwidth}
-    \begin{alertblock}{本文关心的复合攻击场景}
-      已登记的低权限用户既要冒充高权限目标，又不希望审计系统把生成脸关联回自己：
-      \[
-        \underbrace{s_t \ge \tau_v}_{\text{目标身份被接受}},\qquad
-        \underbrace{s_s < \tau_v}_{\text{源身份被拒绝}}.
-      \]
-      这是一个攻击场景中的\textbf{两个安全条件}，评价问题比普通 impersonation 更严格。
-    \end{alertblock}
+    \column{.48\textwidth}
+    \textbf{Impersonation attack（冒充攻击）}\
+    让系统把对抗脸识别为指定目标身份：
+    $s(x_{adv},x_t)\ge\tau_v$。常用于越权认证或身份伪装，属于 targeted attack。
   \end{columns}
 
-  \vspace{0.4em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=4pt]{block body example}
+  \vspace{0.35em}
+  \textbf{复合攻击场景}要求基础攻击目标与另一项安全条件同时成立：
+  \vspace{0.1em}
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3.5pt}\renewcommand{\arraystretch}{1.0}
+  \begin{tabular}{p{2.25cm}p{7.25cm}p{3.35cm}}
+    \toprule
+    场景 & 联合条件 & 代表性工作 \\
+    \midrule
+    双身份联合攻击 & 冒充目标身份，同时逃逸源身份识别 & Adv-Pruning \\
+    认证全链路攻击 & 通过活体/防伪与质量检测，同时完成身份冒充 & MysticMask；Cao et al. \\
+    保护型复合目标 & 逃逸身份识别，同时保留外观、属性或下游数据效用 & face de-identification \\
+    生成内容反取证 & 保持伪造内容有效，同时逃逸检测或生成模型溯源 & TraceEvader \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.15em}
+  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
     \centering
-    联合成功判据：$m_{\mathrm{joint}}=\min(s_t-\tau_v,\,\tau_v-s_s)>0$。\quad
-    \textbf{阈值首先属于评测与威胁模型，不要求所有旧方法都把阈值写进训练损失。}
+    \textbf{当前工作属于第一类：impersonation + dodging。}
+    它是由两种基本攻击组成的特定复合场景，不是第三种基本攻击类型。
   \end{beamercolorbox}
+
+  \vspace{0.1em}
+  {\tiny 依据：RSTAM（2022）；Adv-Pruning（ACM MM 2024）；MysticMask（ICME 2024）；TraceEvader（AAAI 2024）。}
 \end{frame}
 
 % ============================================================
