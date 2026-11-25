@@ -7,48 +7,42 @@
 % ============================================================
 % 1. 基本攻击类型与复合场景
 % ============================================================
-\begin{frame}{人脸对抗攻击的基本类型与复合场景}
-  \footnotesize
+\begin{frame}{从两类基本攻击到不同层次的“复合”}
+  \scriptsize
   现有综述通常按攻击目标将人脸识别对抗攻击分为两类：
-  \vspace{0.2em}
+  \vspace{0.12em}
   \begin{columns}[T]
     \column{.48\textwidth}
-    \textbf{Dodging attack（逃逸攻击）}\
-    让系统无法把对抗脸识别为真实身份：
-    $s(x_{adv},x_s)<\tau_v$。常用于规避识别、监控或身份追踪，属于 untargeted attack。
+    \textbf{Dodging attack（逃逸）}\
+    拒绝源身份：$s(x_{adv},x_s)<\tau_v$；属于 untargeted attack。
 
     \column{.48\textwidth}
-    \textbf{Impersonation attack（冒充攻击）}\
-    让系统把对抗脸识别为指定目标身份：
-    $s(x_{adv},x_t)\ge\tau_v$。常用于越权认证或身份伪装，属于 targeted attack。
+    \textbf{Impersonation attack（冒充）}\
+    接受目标身份：$s(x_{adv},x_t)\ge\tau_v$；属于 targeted attack。
   \end{columns}
 
-  \vspace{0.35em}
-  \textbf{复合攻击场景}要求基础攻击目标与另一项安全条件同时成立：
-  \vspace{0.1em}
+  \vspace{0.18em}
+  \textbf{关键不是把两个名称并列，而是说明“同一张样本在哪种协议下同时成功”。}
+  \vspace{0.04em}
   \centering
-  \scriptsize
-  \setlength{\tabcolsep}{3.5pt}\renewcommand{\arraystretch}{1.0}
-  \begin{tabular}{p{2.25cm}p{7.25cm}p{3.35cm}}
+  \tiny
+  \setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.03}
+  \begin{tabular}{p{2.05cm}p{6.35cm}p{2.65cm}p{2.1cm}}
     \toprule
-    场景 & 联合条件 & 代表性工作 \\
+    层次 / 场景 & 判定方式 & 对应工作 & 与本题关系 \\
     \midrule
-    双身份联合攻击 & 冒充目标身份，同时逃逸源身份识别 & Adv-Pruning \\
-    认证全链路攻击 & 通过活体/防伪与质量检测，同时完成身份冒充 & MysticMask；Cao et al. \\
-    保护型复合目标 & 逃逸身份识别，同时保留外观、属性或下游数据效用 & face de-identification \\
-    生成内容反取证 & 保持伪造内容有效，同时逃逸检测或生成模型溯源 & TraceEvader \\
+    方法级统一\newline（不是复合结果） & 一个框架可分别执行 impersonation 或 dodging；推理时按任务切换 & UAM + ATD\newline（FG 2025） & 避免把 unified 误写成 simultaneous \\
+    同模型复合\newline（已知边界） & 同一 $f,\tau$ 下：target 接受且 source 拒绝 & Lagrangian / multi-task 联合目标 & 基础问题设定 \\
+    迁移黑盒复合\newline（未知边界） & 在 surrogate 生成；未见 victim 上两个判据仍同时成立 & Adv-Pruning\newline（MM 2024） & 直接竞品 \\
+    查询黑盒复合\newline（有限反馈） & 利用少量 victim score，把两个真实阈值同时校正到成功侧 & 当前语料检索未发现直接工作 & 本题保留的窄问题 \\
     \bottomrule
   \end{tabular}
 
-  \vspace{0.15em}
-  \begin{beamercolorbox}[wd=\textwidth,sep=3pt]{block body example}
-    \centering
-    \textbf{当前工作属于第一类：impersonation + dodging。}
-    它是由两种基本攻击组成的特定复合场景，不是第三种基本攻击类型。
-  \end{beamercolorbox}
-
   \vspace{0.1em}
-  {\tiny 依据：RSTAM（2022）；Adv-Pruning（ACM MM 2024）；MysticMask（ICME 2024）；TraceEvader（AAAI 2024）。}
+  {\scriptsize\color{sjtuRedPrimary}\textbf{本题位置：}结果级复合 + 查询黑盒；异构认证/追责双系统可作为后续扩展。}
+
+  \vspace{0.05em}
+  {\tiny 依据：RSTAM（2022）；Zhou et al., \emph{Rethinking Impersonation and Dodging Attacks}, ACM MM 2024；Guo et al., \emph{Unifying and Conquering Adversarial Attacks}, FG 2025。}
 \end{frame}
 
 % ============================================================
